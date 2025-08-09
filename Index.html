@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Логер Идей - Стиль Notion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #ffffff;
+            --secondary-background: #f9fafb;
+            --sidebar-background: #fbfcfd;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background-color: var(--background);
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-background);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo i {
+            color: var(--primary-color);
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .add-category-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .add-category-btn:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--secondary-background);
+            font-weight: 500;
+        }
+
+        .sidebar-item i {
+            width: 16px;
+            color: var(--text-secondary);
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .category-item:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .category-item.active {
+            background-color: var(--secondary-background);
+            font-weight: 500;
+        }
+
+        .category-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .category-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .category-count {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .category-item:hover .category-actions {
+            opacity: 1;
+        }
+
+        .category-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .category-action-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .clear-archive-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .clear-archive-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .import-export-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .import-export-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .add-idea-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .add-idea-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-container {
+            margin-top: 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-container.active {
+            display: flex;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .clear-filter-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .clear-filter-btn:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+        }
+
+        .ideas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .idea-card {
+            background-color: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            height: auto;
+            z-index: 1;
+        }
+
+        .idea-card:hover {
+            box-shadow: var(--shadow-lg);
+            z-index: 10;
+        }
+
+        .idea-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+
+        .idea-card:hover::before {
+            background-color: var(--category-color, #9ca3af);
+        }
+
+        .idea-content-wrapper {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .idea-main {
+            flex: 1;
+            min-width: 0; /* Предотвращает выход контента за границы */
+        }
+
+        .idea-image-container {
+            flex-shrink: 0;
+            width: 120px;
+            height: 120px;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .idea-image-container:hover {
+            transform: scale(1.05);
+        }
+
+        .idea-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Сохраняет пропорции, изображение видно целиком */
+        }
+
+        .idea-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 3;
+        }
+
+        .idea-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            word-break: break-word;
+        }
+
+        .idea-category {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .category-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .idea-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0; /* Предотвращает сжатие кнопок */
+            position: absolute;
+            right: 0;
+            top: 0;
+            z-index: 5;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .idea-content {
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            word-break: break-word;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            transition: -webkit-line-clamp 0.3s ease;
+        }
+
+        .idea-card:hover .idea-content {
+            -webkit-line-clamp: 5;
+        }
+
+        .idea-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .idea-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .idea-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            max-width: 60%; /* Ограничиваем ширину тегов */
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            background-color: var(--secondary-background);
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .tag:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--background);
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: var(--secondary-background);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .tags-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            min-height: 42px;
+            align-items: center;
+        }
+
+        .tags-input-container:focus-within {
+            border-color: var(--primary-color);
+        }
+
+        .tag-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            background-color: var(--secondary-background);
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0;
+            margin-left: 0.25rem;
+        }
+
+        .tags-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            min-width: 100px;
+        }
+
+        .image-upload-container {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .image-upload-container:hover {
+            border-color: var(--primary-color);
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .color-option.selected {
+            border-color: var(--text-primary);
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-background);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background-color: var(--text-primary);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 1rem 0.5rem;
+            }
+
+            .logo span, .sidebar-title, .sidebar-item span, .category-name span, .category-count, .category-actions {
+                display: none;
+            }
+
+            .logo {
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+
+            .sidebar-item {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+
+            .category-item {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .idea-image-container {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-lightbulb"></i>
+                <span>Логер Идей</span>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Рабочее пространство</div>
+                <div class="sidebar-item active" data-view="all">
+                    <i class="fas fa-home"></i>
+                    <span>Все идеи</span>
+                </div>
+                <div class="sidebar-item" data-view="archived">
+                    <i class="fas fa-archive"></i>
+                    <span>Архив</span>
+                </div>
+                <button class="clear-archive-btn" id="clear-archive-btn">
+                    <i class="fas fa-trash"></i>
+                    <span>Очистить архив</span>
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Категории</span>
+                    <button class="add-category-btn" id="add-category-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="categories-list">
+                    <div class="category-item active" data-category="all">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: #9ca3af;"></div>
+                            <span>Все категории</span>
+                        </div>
+                        <div class="category-count" id="count-all">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Данные</div>
+                <button class="import-export-btn" id="export-btn">
+                    <i class="fas fa-download"></i>
+                    <span>Экспорт</span>
+                </button>
+                <button class="import-export-btn" id="import-btn">
+                    <i class="fas fa-upload"></i>
+                    <span>Импорт</span>
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-top">
+                    <h1 class="page-title">Все идеи</h1>
+                    <button class="add-idea-btn" id="add-idea-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Новая идея</span>
+                    </button>
+                </div>
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="search-input" placeholder="Поиск идей...">
+                </div>
+                <div class="filter-container" id="filter-container">
+                    <span class="filter-label">Фильтр по тегу:</span>
+                    <div class="filter-tag" id="filter-tag">
+                        <span id="filter-tag-text"></span>
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <button class="clear-filter-btn" id="clear-filter-btn">Сбросить фильтр</button>
+                </div>
+                <div class="filter-container" id="image-filter-container">
+                    <span class="filter-label">Фильтр: карточки с изображениями</span>
+                    <div class="filter-tag">
+                        <span>С изображениями</span>
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <button class="clear-filter-btn" id="clear-image-filter">Сбросить фильтр</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="ideas-list" id="ideas-list">
+                    <!-- Ideas will be dynamically added here -->
+                </div>
+                <div class="empty-state" id="empty-state">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Пока нет идей</h3>
+                    <p>Нажмите "Новая идея", чтобы добавить свою первую идею</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Idea Modal -->
+    <div class="modal" id="idea-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Новая идея</h2>
+                <button class="close-btn" id="close-modal-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="idea-form">
+                    <div class="form-group">
+                        <label class="form-label" for="idea-title">Заголовок</label>
+                        <input type="text" class="form-input" id="idea-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="idea-content">Содержание</label>
+                        <textarea class="form-textarea" id="idea-content" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="idea-category">Категория</label>
+                        <select class="form-select" id="idea-category" required>
+                            <option value="">Выберите категорию</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="idea-tags">Теги</label>
+                        <div class="tags-input-container" id="tags-container">
+                            <input type="text" class="tags-input" id="idea-tags" placeholder="Добавьте тег и нажмите Enter">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Изображение</label>
+                        <div class="image-upload-container" id="image-upload-container">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
+                            <p>Нажмите для загрузки изображения</p>
+                            <input type="file" id="idea-image" accept="image/*" style="display: none;">
+                            <img id="image-preview" class="image-preview" style="display: none;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-btn">Отмена</button>
+                <button class="btn btn-primary" id="save-idea-btn">Сохранить идею</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal" id="category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="category-modal-title">Новая категория</h2>
+                <button class="close-btn" id="close-category-modal-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="category-form">
+                    <div class="form-group">
+                        <label class="form-label" for="category-name">Название категории</label>
+                        <input type="text" class="form-input" id="category-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Цвет категории</label>
+                        <div class="color-picker-group" id="color-picker">
+                            <div class="color-option selected" style="background-color: #f59e0b;" data-color="#f59e0b"></div>
+                            <div class="color-option" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+                            <div class="color-option" style="background-color: #8b5cf6;" data-color="#8b5cf6"></div>
+                            <div class="color-option" style="background-color: #ec4899;" data-color="#ec4899"></div>
+                            <div class="color-option" style="background-color: #10b981;" data-color="#10b981"></div>
+                            <div class="color-option" style="background-color: #f97316;" data-color="#f97316"></div>
+                            <div class="color-option" style="background-color: #6366f1;" data-color="#6366f1"></div>
+                            <div class="color-option" style="background-color: #84cc16;" data-color="#84cc16"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-category-btn">Отмена</button>
+                <button class="btn btn-primary" id="save-category-btn">Сохранить категорию</button>
+                <button class="btn btn-danger" id="delete-category-btn" style="display: none;">Удалить категорию</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Идея успешно сохранена!</span>
+    </div>
+
+    <script>
+        // Default categories with light colors
+        const defaultCategories = [
+            { id: 'personal', name: 'Личное', color: '#f59e0b', lightColor: '#fef9e7' },
+            { id: 'work', name: 'Работа', color: '#3b82f6', lightColor: '#eff6ff' },
+            { id: 'project', name: 'Проект', color: '#8b5cf6', lightColor: '#f3f0ff' },
+            { id: 'inspiration', name: 'Вдохновение', color: '#ec4899', lightColor: '#fdf2f8' }
+        ];
+
+        // App State
+        let ideas = [];
+        let categories = [];
+        let currentView = 'all';
+        let currentCategory = 'all';
+        let currentTag = null;
+        let currentIdeaId = null;
+        let currentCategoryId = null;
+        let tags = [];
+        let selectedColor = '#f59e0b';
+        let currentImageData = null;
+        let filterByImage = false;
+
+        // Initialize categories with default values if needed
+        function initializeCategories() {
+            try {
+                const storedCategories = localStorage.getItem('categories');
+                if (storedCategories) {
+                    categories = JSON.parse(storedCategories);
+                } else {
+                    categories = [...defaultCategories];
+                }
+                
+                // Add lightColor to existing categories if missing
+                categories = categories.map(function(category) {
+                    if (!category.lightColor) {
+                        const defaultCategory = defaultCategories.find(function(c) { 
+                            return c.id === category.id; 
+                        });
+                        if (defaultCategory) {
+                            return {
+                                id: category.id,
+                                name: category.name,
+                                color: category.color,
+                                lightColor: defaultCategory.lightColor
+                            };
+                        } else {
+                            return {
+                                id: category.id,
+                                name: category.name,
+                                color: category.color,
+                                lightColor: getLightColor(category.color)
+                            };
+                        }
+                    }
+                    return category;
+                });
+            } catch (e) {
+                console.error('Error initializing categories:', e);
+                categories = [...defaultCategories];
+            }
+        }
+
+        // Initialize ideas
+        function initializeIdeas() {
+            try {
+                const storedIdeas = localStorage.getItem('ideas');
+                if (storedIdeas) {
+                    ideas = JSON.parse(storedIdeas);
+                } else {
+                    ideas = [];
+                }
+            } catch (e) {
+                console.error('Error initializing ideas:', e);
+                ideas = [];
+            }
+        }
+
+        // DOM Elements
+        const ideasList = document.getElementById('ideas-list');
+        const emptyState = document.getElementById('empty-state');
+        const ideaModal = document.getElementById('idea-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const ideaForm = document.getElementById('idea-form');
+        const ideaTitleInput = document.getElementById('idea-title');
+        const ideaContentInput = document.getElementById('idea-content');
+        const ideaCategorySelect = document.getElementById('idea-category');
+        const tagsContainer = document.getElementById('tags-container');
+        const searchInput = document.getElementById('search-input');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const categoriesList = document.getElementById('categories-list');
+        const filterContainer = document.getElementById('filter-container');
+        const filterTag = document.getElementById('filter-tag');
+        const filterTagText = document.getElementById('filter-tag-text');
+        const clearFilterBtn = document.getElementById('clear-filter-btn');
+        const clearArchiveBtn = document.getElementById('clear-archive-btn');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const categoryModal = document.getElementById('category-modal');
+        const categoryModalTitle = document.getElementById('category-modal-title');
+        const categoryForm = document.getElementById('category-form');
+        const categoryNameInput = document.getElementById('category-name');
+        const colorPicker = document.getElementById('color-picker');
+        const imageUploadContainer = document.getElementById('image-upload-container');
+        const ideaImageInput = document.getElementById('idea-image');
+        const imagePreview = document.getElementById('image-preview');
+        const exportBtn = document.getElementById('export-btn');
+        const importBtn = document.getElementById('import-btn');
+        const importFile = document.getElementById('import-file');
+        const imageFilterContainer = document.getElementById('image-filter-container');
+
+        // Initialize the app
+        function init() {
+            initializeCategories();
+            initializeIdeas();
+            renderCategories();
+            renderIdeas();
+            setupEventListeners();
+            updateCategoryCounts();
+            updateCategorySelect();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Add idea button
+            document.getElementById('add-idea-btn').addEventListener('click', openAddIdeaModal);
+            
+            // Modal buttons
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            document.getElementById('cancel-btn').addEventListener('click', closeModal);
+            document.getElementById('save-idea-btn').addEventListener('click', saveIdea);
+            
+            // Sidebar navigation
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            for (let i = 0; i < sidebarItems.length; i++) {
+                sidebarItems[i].addEventListener('click', function() {
+                    for (let j = 0; j < sidebarItems.length; j++) {
+                        sidebarItems[j].classList.remove('active');
+                    }
+                    this.classList.add('active');
+                    currentView = this.dataset.view;
+                    clearTagFilter();
+                    clearImageFilter();
+                    renderIdeas();
+                });
+            }
+            
+            // Category filtering
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.category-item')) {
+                    const categoryItem = e.target.closest('.category-item');
+                    const categoryItems = document.querySelectorAll('.category-item');
+                    for (let k = 0; k < categoryItems.length; k++) {
+                        categoryItems[k].classList.remove('active');
+                    }
+                    categoryItem.classList.add('active');
+                    currentCategory = categoryItem.dataset.category;
+                    clearTagFilter();
+                    clearImageFilter();
+                    renderIdeas();
+                }
+            });
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                renderIdeas();
+            });
+            
+            // Clear filter button
+            clearFilterBtn.addEventListener('click', clearTagFilter);
+            
+            // Filter tag click
+            filterTag.addEventListener('click', clearTagFilter);
+            
+            // Clear image filter button
+            document.querySelector('#image-filter-container .clear-filter-btn').addEventListener('click', clearImageFilter);
+            document.querySelector('#image-filter-container .filter-tag').addEventListener('click', clearImageFilter);
+            
+            // Clear archive button
+            clearArchiveBtn.addEventListener('click', clearArchive);
+            
+            // Category management
+            addCategoryBtn.addEventListener('click', openAddCategoryModal);
+            document.getElementById('close-category-modal-btn').addEventListener('click', closeCategoryModal);
+            document.getElementById('cancel-category-btn').addEventListener('click', closeCategoryModal);
+            document.getElementById('save-category-btn').addEventListener('click', saveCategory);
+            document.getElementById('delete-category-btn').addEventListener('click', deleteCategory);
+            
+            // Color picker
+            colorPicker.addEventListener('click', function(e) {
+                if (e.target.classList.contains('color-option')) {
+                    const colorOptions = document.querySelectorAll('.color-option');
+                    for (let l = 0; l < colorOptions.length; l++) {
+                        colorOptions[l].classList.remove('selected');
+                    }
+                    e.target.classList.add('selected');
+                    selectedColor = e.target.dataset.color;
+                }
+            });
+            
+            // Image upload
+            imageUploadContainer.addEventListener('click', function() {
+                ideaImageInput.click();
+            });
+            
+            ideaImageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        currentImageData = event.target.result;
+                        imagePreview.src = currentImageData;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Import/Export
+            exportBtn.addEventListener('click', exportData);
+            importBtn.addEventListener('click', function() {
+                importFile.click();
+            });
+            importFile.addEventListener('change', importData);
+            
+            // Click outside modal to close
+            ideaModal.addEventListener('click', function(e) {
+                if (e.target === ideaModal) {
+                    closeModal();
+                }
+            });
+            
+            categoryModal.addEventListener('click', function(e) {
+                if (e.target === categoryModal) {
+                    closeCategoryModal();
+                }
+            });
+        }
+
+        // Import/Export functions
+        function exportData() {
+            const data = {
+                ideas: ideas,
+                categories: categories,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'ideas_backup_' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            
+            showToast('Данные успешно экспортированы');
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (data.ideas && Array.isArray(data.ideas)) {
+                        ideas = data.ideas;
+                    }
+                    
+                    if (data.categories && Array.isArray(data.categories)) {
+                        categories = data.categories;
+                    }
+                    
+                    saveIdeasToStorage();
+                    saveCategoriesToStorage();
+                    renderCategories();
+                    updateCategoryCounts();
+                    updateCategorySelect();
+                    renderIdeas();
+                    
+                    showToast('Данные успешно импортированы');
+                } catch (error) {
+                    showToast('Ошибка при импорте данных', 'error');
+                    console.error('Import error:', error);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the file input
+            e.target.value = '';
+        }
+
+        // Clear archive
+        function clearArchive() {
+            if (confirm('Вы уверены, что хотите удалить все архивные идеи? Это действие невозможно отменить.')) {
+                ideas = ideas.filter(function(idea) { return !idea.archived; });
+                saveIdeasToStorage();
+                updateCategoryCounts();
+                renderIdeas();
+                showToast('Архив успешно очищен');
+            }
+        }
+
+        // Category management functions
+        function openAddCategoryModal() {
+            currentCategoryId = null;
+            categoryModalTitle.textContent = 'Новая категория';
+            categoryForm.reset();
+            const colorOptions = document.querySelectorAll('.color-option');
+            for (let i = 0; i < colorOptions.length; i++) {
+                colorOptions[i].classList.remove('selected');
+            }
+            document.querySelector('.color-option').classList.add('selected');
+            selectedColor = '#f59e0b';
+            document.getElementById('delete-category-btn').style.display = 'none';
+            categoryModal.classList.add('active');
+        }
+
+        function openEditCategoryModal(categoryId) {
+            const category = categories.find(function(c) { return c.id === categoryId; });
+            if (!category) return;
+            
+            currentCategoryId = categoryId;
+            categoryModalTitle.textContent = 'Редактировать категорию';
+            categoryNameInput.value = category.name;
+            const colorOptions = document.querySelectorAll('.color-option');
+            for (let i = 0; i < colorOptions.length; i++) {
+                colorOptions[i].classList.remove('selected');
+            }
+            const colorOption = document.querySelector('[data-color="' + category.color + '"]');
+            if (colorOption) {
+                colorOption.classList.add('selected');
+                selectedColor = category.color;
+            }
+            document.getElementById('delete-category-btn').style.display = 'block';
+            categoryModal.classList.add('active');
+        }
+
+        function closeCategoryModal() {
+            categoryModal.classList.remove('active');
+            categoryForm.reset();
+        }
+
+        function saveCategory() {
+            const name = categoryNameInput.value.trim();
+            
+            if (!name) {
+                showToast('Пожалуйста, введите название категории', 'error');
+                return;
+            }
+            
+            if (currentCategoryId) {
+                // Update existing category
+                const categoryIndex = categories.findIndex(function(c) { return c.id === currentCategoryId; });
+                if (categoryIndex !== -1) {
+                    categories[categoryIndex] = {
+                        id: categories[categoryIndex].id,
+                        name: name,
+                        color: selectedColor,
+                        lightColor: getLightColor(selectedColor)
+                    };
+                    showToast('Категория успешно обновлена');
+                }
+            } else {
+                // Create new category
+                const newCategory = {
+                    id: Date.now().toString(),
+                    name: name,
+                    color: selectedColor,
+                    lightColor: getLightColor(selectedColor)
+                };
+                categories.push(newCategory);
+                showToast('Категория успешно создана');
+            }
+            
+            saveCategoriesToStorage();
+            renderCategories();
+            updateCategoryCounts();
+            updateCategorySelect();
+            renderIdeas(); // Перерисовываем карточки для обновления фона
+            closeCategoryModal();
+        }
+
+        function deleteCategory() {
+            if (confirm('Вы уверены, что хотите удалить эту категорию? Все идеи в этой категории будут помечены как "Без категории".')) {
+                // Move ideas from this category to uncategorized
+                ideas = ideas.map(function(idea) {
+                    if (idea.category === currentCategoryId) {
+                        return {
+                            id: idea.id,
+                            title: idea.title,
+                            content: idea.content,
+                            category: null,
+                            tags: idea.tags,
+                            image: idea.image,
+                            createdAt: idea.createdAt,
+                            updatedAt: idea.updatedAt,
+                            archived: idea.archived
+                        };
+                    }
+                    return idea;
+                });
+                
+                categories = categories.filter(function(c) { return c.id !== currentCategoryId; });
+                saveCategoriesToStorage();
+                saveIdeasToStorage();
+                renderCategories();
+                updateCategoryCounts();
+                updateCategorySelect();
+                renderIdeas();
+                closeCategoryModal();
+                showToast('Категория удалена');
+            }
+        }
+
+        // Clear tag filter
+        function clearTagFilter() {
+            currentTag = null;
+            filterContainer.classList.remove('active');
+            renderIdeas();
+        }
+
+        // Clear image filter
+        function clearImageFilter() {
+            filterByImage = false;
+            imageFilterContainer.classList.remove('active');
+            renderIdeas();
+        }
+
+        // Set tag filter
+        function setTagFilter(tag) {
+            currentTag = tag;
+            filterContainer.classList.add('active');
+            filterTagText.textContent = tag;
+            renderIdeas();
+        }
+
+        // Set image filter
+        function setImageFilter() {
+            filterByImage = true;
+            imageFilterContainer.classList.add('active');
+            renderIdeas();
+        }
+
+        // Update category select in idea modal
+        function updateCategorySelect() {
+            let options = '<option value="">Выберите категорию</option>';
+            for (let i = 0; i < categories.length; i++) {
+                options += '<option value="' + categories[i].id + '">' + categories[i].name + '</option>';
+            }
+            ideaCategorySelect.innerHTML = options;
+        }
+
+        // Render categories in the sidebar
+        function renderCategories() {
+            let categoriesHTML = '';
+            for (let i = 0; i < categories.length; i++) {
+                categoriesHTML += `
+                    <div class="category-item" data-category="${categories[i].id}">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: ${categories[i].color};"></div>
+                            <span>${categories[i].name}</span>
+                        </div>
+                        <div class="category-count" id="count-${categories[i].id}">0</div>
+                        <div class="category-actions">
+                            <button class="category-action-btn edit-category-btn" data-id="${categories[i].id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="category-action-btn delete-category-btn" data-id="${categories[i].id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            categoriesList.innerHTML = `
+                <div class="category-item active" data-category="all">
+                    <div class="category-name">
+                        <div class="category-color" style="background-color: #9ca3af;"></div>
+                        <span>Все категории</span>
+                    </div>
+                    <div class="category-count" id="count-all">0</div>
+                </div>
+            ` + categoriesHTML;
+            
+            // Add event listeners to category action buttons
+            const editButtons = document.querySelectorAll('.edit-category-btn');
+            for (let j = 0; j < editButtons.length; j++) {
+                editButtons[j].addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const categoryId = this.dataset.id;
+                    openEditCategoryModal(categoryId);
+                });
+            }
+            
+            const deleteButtons = document.querySelectorAll('.delete-category-btn');
+            for (let k = 0; k < deleteButtons.length; k++) {
+                deleteButtons[k].addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const categoryId = this.dataset.id;
+                    if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
+                        // Move ideas from this category to uncategorized
+                        ideas = ideas.map(function(idea) {
+                            if (idea.category === categoryId) {
+                                return {
+                                    id: idea.id,
+                                    title: idea.title,
+                                    content: idea.content,
+                                    category: null,
+                                    tags: idea.tags,
+                                    image: idea.image,
+                                    createdAt: idea.createdAt,
+                                    updatedAt: idea.updatedAt,
+                                    archived: idea.archived
+                                };
+                            }
+                            return idea;
+                        });
+                        
+                        categories = categories.filter(function(c) { return c.id !== categoryId; });
+                        saveCategoriesToStorage();
+                        saveIdeasToStorage();
+                        renderCategories();
+                        updateCategoryCounts();
+                        updateCategorySelect();
+                        renderIdeas();
+                        showToast('Категория удалена');
+                    }
+                });
+            }
+        }
+
+        // Update category counts
+        function updateCategoryCounts() {
+            // Count all ideas
+            const allCount = ideas.filter(function(idea) { return !idea.archived; }).length;
+            const countAllElement = document.getElementById('count-all');
+            if (countAllElement) {
+                countAllElement.textContent = allCount;
+            }
+            
+            // Count by category
+            for (let i = 0; i < categories.length; i++) {
+                const count = ideas.filter(function(idea) { 
+                    return idea.category === categories[i].id && !idea.archived; 
+                }).length;
+                const countElement = document.getElementById('count-' + categories[i].id);
+                if (countElement) {
+                    countElement.textContent = count;
+                }
+            }
+        }
+
+        // Function to get light color from hex (more lighter version)
+        function getLightColor(hexColor) {
+            // Convert hex to RGB
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            
+            // Calculate much lighter color (85% white, 15% color)
+            const lightR = Math.round(r * 0.15 + 255 * 0.85);
+            const lightG = Math.round(g * 0.15 + 255 * 0.85);
+            const lightB = Math.round(b * 0.15 + 255 * 0.85);
+            
+            // Convert back to hex
+            return '#' + 
+                lightR.toString(16).padStart(2, '0') + 
+                lightG.toString(16).padStart(2, '0') + 
+                lightB.toString(16).padStart(2, '0');
+        }
+
+        // Render ideas list
+        function renderIdeas() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            // Filter ideas based on current view, category, tag, and search term
+            let filteredIdeas = ideas.filter(function(idea) {
+                // Filter by view (all or archived)
+                if (currentView === 'archived' && !idea.archived) return false;
+                if (currentView !== 'archived' && idea.archived) return false;
+                
+                // Filter by category
+                if (currentCategory !== 'all' && idea.category !== currentCategory) return false;
+                
+                // Filter by tag
+                if (currentTag && (!idea.tags || !idea.tags.includes(currentTag))) return false;
+                
+                // Filter by image
+                if (filterByImage && !idea.image) return false;
+                
+                // Filter by search term
+                if (searchTerm && 
+                    !idea.title.toLowerCase().includes(searchTerm) && 
+                    !idea.content.toLowerCase().includes(searchTerm) &&
+                    (!idea.tags || !idea.tags.some(function(tag) { return tag.toLowerCase().includes(searchTerm); }))) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Sort ideas by date (newest first)
+            filteredIdeas.sort(function(a, b) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+            
+            if (filteredIdeas.length === 0) {
+                ideasList.style.display = 'none';
+                emptyState.style.display = 'flex';
+                
+                if (filterByImage) {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-image"></i>
+                        <h3>Нет идей с изображениями</h3>
+                        <p>Добавьте изображения к идеям или сбросьте фильтр</p>
+                    `;
+                } else if (currentTag) {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-tag"></i>
+                        <h3>Нет идей с тегом "${currentTag}"</h3>
+                        <p>Попробуйте другой тег или сбросьте фильтр</p>
+                    `;
+                } else if (searchTerm) {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-search"></i>
+                        <h3>Нет подходящих идей</h3>
+                        <p>Попробуйте другой поисковый запрос</p>
+                    `;
+                } else if (currentView === 'archived') {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-archive"></i>
+                        <h3>Нет архивированных идей</h3>
+                        <p>Архивируйте некоторые идеи, чтобы увидеть их здесь</p>
+                    `;
+                } else {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Пока нет идей</h3>
+                        <p>Нажмите "Новая идея", чтобы добавить свою первую идею</p>
+                    `;
+                }
+            } else {
+                ideasList.style.display = 'flex';
+                emptyState.style.display = 'none';
+                
+                let ideasHTML = '';
+                for (let i = 0; i < filteredIdeas.length; i++) {
+                    const idea = filteredIdeas[i];
+                    const category = categories.find(function(c) { return c.id === idea.category; });
+                    let lightColor = '#f9fafb'; // Default very light gray
+                    
+                    if (category) {
+                        lightColor = category.lightColor || getLightColor(category.color);
+                    }
+                    
+                    const categoryName = category ? category.name : 'Без категории';
+                    const categoryColor = category ? category.color : '#9ca3af';
+                    const formattedDate = new Date(idea.createdAt).toLocaleDateString('ru-RU', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                    const formattedTime = new Date(idea.createdAt).toLocaleTimeString('ru-RU', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    ideasHTML += `
+                        <div class="idea-card" data-id="${idea.id}" style="background-color: ${lightColor}; --category-color: ${categoryColor};">
+                            <div class="idea-content-wrapper">
+                                ${idea.image ? `
+                                    <div class="idea-image-container" onclick="setImageFilter()">
+                                        <img src="${idea.image}" alt="Изображение идеи" class="idea-image">
+                                    </div>
+                                ` : ''}
+                                <div class="idea-main">
+                                    <div class="idea-header">
+                                        <div>
+                                            <div class="idea-title">${idea.title}</div>
+                                            <div class="idea-category">
+                                                <div class="category-dot" style="background-color: ${categoryColor};"></div>
+                                                ${categoryName}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="idea-content">${idea.content}</div>
+                                    <div class="idea-footer">
+                                        <div class="idea-date">${formattedDate} в ${formattedTime}</div>
+                                        <div class="idea-tags">
+                                            ${(idea.tags || []).map(function(tag) { 
+                                                return '<span class="tag" data-tag="' + tag + '">' + tag + '</span>'; 
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="idea-actions">
+                                <button class="action-btn edit-btn" data-id="${idea.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn archive-btn" data-id="${idea.id}">
+                                    <i class="fas fa-${idea.archived ? 'undo' : 'archive'}"></i>
+                                </button>
+                                <button class="action-btn delete-btn" data-id="${idea.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                ideasList.innerHTML = ideasHTML;
+                
+                // Add event listeners to idea cards
+                const editButtons = document.querySelectorAll('.edit-btn');
+                for (let j = 0; j < editButtons.length; j++) {
+                    editButtons[j].addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const ideaId = this.dataset.id;
+                        openEditIdeaModal(ideaId);
+                    });
+                }
+                
+                const archiveButtons = document.querySelectorAll('.archive-btn');
+                for (let k = 0; k < archiveButtons.length; k++) {
+                    archiveButtons[k].addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const ideaId = this.dataset.id;
+                        toggleArchiveIdea(ideaId);
+                    });
+                }
+                
+                const deleteButtons = document.querySelectorAll('.delete-btn');
+                for (let l = 0; l < deleteButtons.length; l++) {
+                    deleteButtons[l].addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const ideaId = this.dataset.id;
+                        deleteIdea(ideaId);
+                    });
+                }
+                
+                // Add event listeners to tags
+                const tagElements = document.querySelectorAll('.tag');
+                for (let m = 0; m < tagElements.length; m++) {
+                    tagElements[m].addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const tagValue = this.dataset.tag;
+                        setTagFilter(tagValue);
+                    });
+                }
+            }
+        }
+
+        // Open modal to add a new idea
+        function openAddIdeaModal() {
+            currentIdeaId = null;
+            modalTitle.textContent = 'Новая идея';
+            ideaForm.reset();
+            tags = [];
+            currentImageData = null;
+            imagePreview.style.display = 'none';
+            renderTags();
+            ideaModal.classList.add('active');
+        }
+
+        // Open modal to edit an existing idea
+        function openEditIdeaModal(ideaId) {
+            const idea = ideas.find(function(i) { return i.id === ideaId; });
+            if (!idea) return;
+            
+            currentIdeaId = ideaId;
+            modalTitle.textContent = 'Редактировать идею';
+            ideaTitleInput.value = idea.title;
+            ideaContentInput.value = idea.content;
+            ideaCategorySelect.value = idea.category || '';
+            tags = idea.tags || []; // Ensure tags is always an array
+            
+            if (idea.image) {
+                currentImageData = idea.image;
+                imagePreview.src = idea.image;
+                imagePreview.style.display = 'block';
+            } else {
+                currentImageData = null;
+                imagePreview.style.display = 'none';
+            }
+            
+            renderTags();
+            ideaModal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            ideaModal.classList.remove('active');
+            ideaForm.reset();
+            tags = [];
+            currentImageData = null;
+            imagePreview.style.display = 'none';
+        }
+
+        // Save idea (create or update)
+        function saveIdea() {
+            const title = ideaTitleInput.value.trim();
+            const content = ideaContentInput.value.trim();
+            const category = ideaCategorySelect.value;
+            
+            if (!title || !content) {
+                showToast('Пожалуйста, заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            if (currentIdeaId) {
+                // Update existing idea
+                const ideaIndex = ideas.findIndex(function(i) { return i.id === currentIdeaId; });
+                if (ideaIndex !== -1) {
+                    ideas[ideaIndex] = {
+                        id: ideas[ideaIndex].id,
+                        title: title,
+                        content: content,
+                        category: category || null,
+                        tags: tags.slice(), // Create a new array to ensure it's saved
+                        image: currentImageData,
+                        createdAt: ideas[ideaIndex].createdAt,
+                        updatedAt: new Date().toISOString(),
+                        archived: ideas[ideaIndex].archived
+                    };
+                    showToast('Идея успешно обновлена');
+                }
+            } else {
+                // Create new idea
+                const newIdea = {
+                    id: Date.now().toString(),
+                    title: title,
+                    content: content,
+                    category: category || null,
+                    tags: tags.slice(), // Create a new array to ensure it's saved
+                    image: currentImageData,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    archived: false
+                };
+                ideas.push(newIdea);
+                showToast('Идея успешно создана');
+            }
+            
+            saveIdeasToStorage();
+            updateCategoryCounts();
+            renderIdeas();
+            closeModal();
+        }
+
+        // Toggle archive status of an idea
+        function toggleArchiveIdea(ideaId) {
+            const ideaIndex = ideas.findIndex(function(i) { return i.id === ideaId; });
+            if (ideaIndex !== -1) {
+                ideas[ideaIndex].archived = !ideas[ideaIndex].archived;
+                saveIdeasToStorage();
+                updateCategoryCounts();
+                renderIdeas();
+                showToast(ideas[ideaIndex].archived ? 'Идея архивирована' : 'Идея восстановлена');
+            }
+        }
+
+        // Delete an idea
+        function deleteIdea(ideaId) {
+            if (confirm('Вы уверены, что хотите удалить эту идею?')) {
+                ideas = ideas.filter(function(i) { return i.id !== ideaId; });
+                saveIdeasToStorage();
+                updateCategoryCounts();
+                renderIdeas();
+                showToast('Идея удалена');
+            }
+        }
+
+        // Add a tag
+        function addTag() {
+            const tagsInput = document.getElementById('idea-tags');
+            const tagValue = tagsInput.value.trim();
+            if (tagValue && tags.indexOf(tagValue) === -1) {
+                tags.push(tagValue);
+                renderTags();
+                // Focus back to input after adding tag
+                setTimeout(function() {
+                    const newTagsInput = document.getElementById('idea-tags');
+                    if (newTagsInput) {
+                        newTagsInput.focus();
+                    }
+                }, 0);
+            }
+        }
+
+        // Remove a tag
+        function removeTag(tagValue) {
+            tags = tags.filter(function(tag) { return tag !== tagValue; });
+            renderTags();
+        }
+
+        // Render tags in the modal
+        function renderTags() {
+            let tagsHTML = '';
+            for (let i = 0; i < tags.length; i++) {
+                tagsHTML += `
+                    <div class="tag-item">
+                        ${tags[i]}
+                        <button type="button" class="tag-remove" data-tag="${tags[i]}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            tagsContainer.innerHTML = tagsHTML + `
+                <input type="text" class="tags-input" id="idea-tags" placeholder="Добавьте тег и нажмите Enter">
+            `;
+            
+            // Re-attach event listener to the new input
+            const tagsInput = document.getElementById('idea-tags');
+            if (tagsInput) {
+                tagsInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag();
+                    }
+                });
+            }
+            
+            // Add event listeners to remove buttons
+            const removeButtons = document.querySelectorAll('.tag-remove');
+            for (let j = 0; j < removeButtons.length; j++) {
+                removeButtons[j].addEventListener('click', function() {
+                    removeTag(this.dataset.tag);
+                });
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Save ideas to localStorage
+        function saveIdeasToStorage() {
+            try {
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+            } catch (e) {
+                console.error('Error saving ideas to localStorage:', e);
+            }
+        }
+
+        // Save categories to localStorage
+        function saveCategoriesToStorage() {
+            try {
+                localStorage.setItem('categories', JSON.stringify(categories));
+            } catch (e) {
+                console.error('Error saving categories to localStorage:', e);
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
