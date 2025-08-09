@@ -250,11 +250,8 @@
         .search-container {
             flex: 1;
             position: relative;
-            max-width: 500px;
+            max-width: none;
             transition: max-width 0.3s ease;
-        }
-        .search-container.expanded {
-            max-width: calc(100% - 200px);
         }
         .search-input {
             width: 100%;
@@ -295,29 +292,6 @@
         }
         .search-clear.visible {
             display: block;
-        }
-        .add-idea-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 0.375rem;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s, padding 0.2s;
-            white-space: nowrap;
-        }
-        .add-idea-btn:hover {
-            background-color: var(--primary-hover);
-        }
-        .add-idea-btn.compact {
-            padding: 0.5rem;
-        }
-        .add-idea-btn.compact span {
-            display: none;
         }
         .filter-container {
             margin-top: 0.5rem;
@@ -511,6 +485,35 @@
         .tag:hover {
             background-color: var(--primary-color);
             color: white;
+        }
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            z-index: 100;
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .fab:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+        .fab.dragging {
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.2);
+            transform: scale(1.1);
         }
         /* Modal Styles */
         .modal {
@@ -794,11 +797,10 @@
             .current-category {
                 font-size: 1.25rem;
             }
-            .search-container {
-                max-width: none;
-            }
-            .search-container.expanded {
-                max-width: calc(100% - 120px);
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
             }
         }
     </style>
@@ -871,10 +873,6 @@
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <button class="add-idea-btn" id="add-idea-btn">
-                        <i class="fas fa-plus"></i>
-                        <span>Новая идея</span>
-                    </button>
                 </div>
                 <div class="filter-container" id="filter-container">
                     <span class="filter-label">Фильтр по тегу:</span>
@@ -900,10 +898,15 @@
                 <div class="empty-state" id="empty-state">
                     <i class="fas fa-lightbulb"></i>
                     <h3>Пока нет идей</h3>
-                    <p>Нажмите "Новая идея", чтобы добавить свою первую идею</p>
+                    <p>Нажмите на плюс, чтобы добавить свою первую идею</p>
                 </div>
             </div>
         </main>
+        
+        <!-- Floating Action Button -->
+        <button class="fab" id="fab">
+            <i class="fas fa-plus"></i>
+        </button>
     </div>
     <!-- Idea Modal -->
     <div class="modal" id="idea-modal">
@@ -1266,7 +1269,6 @@
                 this.searchInput = document.getElementById('search-input');
                 this.searchClear = document.getElementById('search-clear');
                 this.searchContainer = document.getElementById('search-container');
-                this.addIdeaBtn = document.getElementById('add-idea-btn');
                 this.filterContainer = document.getElementById('filter-container');
                 this.imageFilterContainer = document.getElementById('image-filter-container');
                 this.filterTagText = document.getElementById('filter-tag-text');
@@ -1276,6 +1278,15 @@
                 this.sidebar = document.getElementById('sidebar');
                 this.menuToggle = document.getElementById('menu-toggle');
                 this.currentCategoryElement = document.getElementById('current-category');
+                this.fab = document.getElementById('fab');
+                
+                // Для перетаскивания FAB
+                this.isDragging = false;
+                this.dragStartX = 0;
+                this.dragStartY = 0;
+                this.fabStartX = 0;
+                this.fabStartY = 0;
+                this.longPressTimer = null;
             }
 
             // Инициализация UI
@@ -1287,6 +1298,7 @@
                 this.updateCategorySelect();
                 this.updateCurrentCategoryTitle();
                 this.updateSearchInterface();
+                this.setupFabDragging();
             }
 
             // Настройка обработчиков событий
@@ -1296,8 +1308,8 @@
                     this.toggleSidebar();
                 });
 
-                // Кнопка добавления идеи
-                document.getElementById('add-idea-btn').addEventListener('click', () => {
+                // Кнопка добавления идеи (FAB)
+                this.fab.addEventListener('click', () => {
                     this.openIdeaModal();
                 });
 
@@ -1441,6 +1453,141 @@
                 });
             }
 
+            // Настройка перетаскивания FAB
+            setupFabDragging() {
+                // События для мыши
+                this.fab.addEventListener('mousedown', (e) => {
+                    this.startFabDrag(e.clientX, e.clientY);
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        this.dragFab(e.clientX, e.clientY);
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    this.endFabDrag();
+                });
+
+                // События для касания
+                this.fab.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    this.startFabDrag(touch.clientX, touch.clientY);
+                });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (this.isDragging) {
+                        const touch = e.touches[0];
+                        this.dragFab(touch.clientX, touch.clientY);
+                        e.preventDefault(); // Предотвращаем прокрутку страницы
+                    }
+                });
+
+                document.addEventListener('touchend', () => {
+                    this.endFabDrag();
+                });
+            }
+
+            // Начало перетаскивания FAB
+            startFabDrag(clientX, clientY) {
+                // Устанавливаем таймер для определения долгого нажатия
+                this.longPressTimer = setTimeout(() => {
+                    this.isDragging = true;
+                    this.fab.classList.add('dragging');
+                    
+                    // Сохраняем начальные позиции
+                    this.dragStartX = clientX;
+                    this.dragStartY = clientY;
+                    
+                    const fabRect = this.fab.getBoundingClientRect();
+                    this.fabStartX = fabRect.left;
+                    this.fabStartY = fabRect.top;
+                }, 500); // 500 мс для долгого нажатия
+            }
+
+            // Перетаскивание FAB
+            dragFab(clientX, clientY) {
+                if (!this.isDragging) return;
+
+                // Вычисляем смещение
+                const deltaX = clientX - this.dragStartX;
+                const deltaY = clientY - this.dragStartY;
+
+                // Новая позиция FAB
+                let newX = this.fabStartX + deltaX;
+                let newY = this.fabStartY + deltaY;
+
+                // Ограничиваем перемещение в пределах окна
+                const fabSize = 56; // Размер FAB
+                const margin = 10; // Отступ от краев
+
+                newX = Math.max(margin, Math.min(window.innerWidth - fabSize - margin, newX));
+                newY = Math.max(margin, Math.min(window.innerHeight - fabSize - margin, newY));
+
+                // Применяем новую позицию
+                this.fab.style.left = `${newX}px`;
+                this.fab.style.top = `${newY}px`;
+                this.fab.style.right = 'auto';
+                this.fab.style.bottom = 'auto';
+            }
+
+            // Окончание перетаскивания FAB
+            endFabDrag() {
+                // Сбрасываем таймер долгого нажатия
+                if (this.longPressTimer) {
+                    clearTimeout(this.longPressTimer);
+                    this.longPressTimer = null;
+                }
+
+                // Если было перетаскивание
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.fab.classList.remove('dragging');
+                    
+                    // Сохраняем позицию FAB в localStorage
+                    const fabRect = this.fab.getBoundingClientRect();
+                    localStorage.setItem('fabPosition', JSON.stringify({
+                        left: fabRect.left,
+                        top: fabRect.top
+                    }));
+                }
+            }
+
+            // Восстановление позиции FAB
+            restoreFabPosition() {
+                const savedPosition = localStorage.getItem('fabPosition');
+                if (savedPosition) {
+                    try {
+                        const position = JSON.parse(savedPosition);
+                        
+                        // Проверяем, что позиция в пределах видимой области
+                        const fabSize = 56;
+                        const margin = 10;
+                        
+                        if (position.left >= margin && 
+                            position.left <= window.innerWidth - fabSize - margin &&
+                            position.top >= margin && 
+                            position.top <= window.innerHeight - fabSize - margin) {
+                            
+                            this.fab.style.left = `${position.left}px`;
+                            this.fab.style.top = `${position.top}px`;
+                            this.fab.style.right = 'auto';
+                            this.fab.style.bottom = 'auto';
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Error restoring FAB position:', e);
+                    }
+                }
+                
+                // Если сохраненная позиция недействительна, используем позицию по умолчанию
+                this.fab.style.left = 'auto';
+                this.fab.style.top = 'auto';
+                this.fab.style.right = '1.5rem';
+                this.fab.style.bottom = '1.5rem';
+            }
+
             // Обновление интерфейса поиска
             updateSearchInterface() {
                 const searchValue = this.searchInput.value;
@@ -1450,15 +1597,6 @@
                     this.searchClear.classList.add('visible');
                 } else {
                     this.searchClear.classList.remove('visible');
-                }
-                
-                // Расширяем поле поиска и уменьшаем кнопку, если текст длиннее 4 символов
-                if (searchValue.length > 4) {
-                    this.searchContainer.classList.add('expanded');
-                    this.addIdeaBtn.classList.add('compact');
-                } else {
-                    this.searchContainer.classList.remove('expanded');
-                    this.addIdeaBtn.classList.remove('compact');
                 }
             }
 
@@ -1531,7 +1669,7 @@
                         this.emptyState.innerHTML = `
                             <i class="fas fa-lightbulb"></i>
                             <h3>Пока нет идей</h3>
-                            <p>Нажмите "Новая идея", чтобы добавить свою первую идею</p>
+                            <p>Нажмите на плюс, чтобы добавить свою первую идею</p>
                         `;
                     }
                 } else {
@@ -2054,6 +2192,9 @@
             window.uiManager = uiManager;
             
             uiManager.init();
+            
+            // Восстанавливаем позицию FAB после инициализации
+            uiManager.restoreFabPosition();
         });
     </script>
 </body>
