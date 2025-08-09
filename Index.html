@@ -251,6 +251,10 @@
             flex: 1;
             position: relative;
             max-width: 500px;
+            transition: max-width 0.3s ease;
+        }
+        .search-container.expanded {
+            max-width: calc(100% - 200px);
         }
         .search-input {
             width: 100%;
@@ -271,6 +275,27 @@
             transform: translateY(-50%);
             color: var(--text-secondary);
         }
+        .search-clear {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+            font-size: 0.875rem;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        .search-clear:hover {
+            background-color: var(--secondary-background);
+        }
+        .search-clear.visible {
+            display: block;
+        }
         .add-idea-btn {
             background-color: var(--primary-color);
             color: white;
@@ -282,11 +307,17 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, padding 0.2s;
             white-space: nowrap;
         }
         .add-idea-btn:hover {
             background-color: var(--primary-hover);
+        }
+        .add-idea-btn.compact {
+            padding: 0.5rem;
+        }
+        .add-idea-btn.compact span {
+            display: none;
         }
         .filter-container {
             margin-top: 0.5rem;
@@ -766,6 +797,9 @@
             .search-container {
                 max-width: none;
             }
+            .search-container.expanded {
+                max-width: calc(100% - 120px);
+            }
         }
     </style>
 </head>
@@ -830,9 +864,12 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <h1 class="current-category" id="current-category">Все категории</h1>
-                    <div class="search-container">
+                    <div class="search-container" id="search-container">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" class="search-input" id="search-input" placeholder="Поиск идей...">
+                        <button class="search-clear" id="search-clear">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     <button class="add-idea-btn" id="add-idea-btn">
                         <i class="fas fa-plus"></i>
@@ -1227,6 +1264,9 @@
                 this.ideaModal = document.getElementById('idea-modal');
                 this.categoryModal = document.getElementById('category-modal');
                 this.searchInput = document.getElementById('search-input');
+                this.searchClear = document.getElementById('search-clear');
+                this.searchContainer = document.getElementById('search-container');
+                this.addIdeaBtn = document.getElementById('add-idea-btn');
                 this.filterContainer = document.getElementById('filter-container');
                 this.imageFilterContainer = document.getElementById('image-filter-container');
                 this.filterTagText = document.getElementById('filter-tag-text');
@@ -1246,6 +1286,7 @@
                 this.updateCategoryCounts();
                 this.updateCategorySelect();
                 this.updateCurrentCategoryTitle();
+                this.updateSearchInterface();
             }
 
             // Настройка обработчиков событий
@@ -1300,7 +1341,13 @@
 
                 // Поиск
                 this.searchInput.addEventListener('input', () => {
+                    this.updateSearchInterface();
                     this.renderIdeas();
+                });
+
+                // Очистка поиска
+                this.searchClear.addEventListener('click', () => {
+                    this.clearSearch();
                 });
 
                 // Очистка фильтров
@@ -1392,6 +1439,34 @@
                         this.closeCategoryModal();
                     }
                 });
+            }
+
+            // Обновление интерфейса поиска
+            updateSearchInterface() {
+                const searchValue = this.searchInput.value;
+                
+                // Показываем или скрываем крестик очистки
+                if (searchValue.length > 0) {
+                    this.searchClear.classList.add('visible');
+                } else {
+                    this.searchClear.classList.remove('visible');
+                }
+                
+                // Расширяем поле поиска и уменьшаем кнопку, если текст длиннее 4 символов
+                if (searchValue.length > 4) {
+                    this.searchContainer.classList.add('expanded');
+                    this.addIdeaBtn.classList.add('compact');
+                } else {
+                    this.searchContainer.classList.remove('expanded');
+                    this.addIdeaBtn.classList.remove('compact');
+                }
+            }
+
+            // Очистка поля поиска
+            clearSearch() {
+                this.searchInput.value = '';
+                this.updateSearchInterface();
+                this.renderIdeas();
             }
 
             // Обновление заголовка текущей категории
