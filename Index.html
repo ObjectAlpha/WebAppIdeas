@@ -471,8 +471,14 @@
         .idea-tags {
             display: flex;
             gap: 0.5rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
             max-width: 60%;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .idea-tags::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari and Opera */
         }
         .tag {
             font-size: 0.75rem;
@@ -482,6 +488,7 @@
             cursor: pointer;
             transition: background-color 0.2s, color 0.2s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .tag:hover {
             background-color: var(--primary-color);
@@ -775,10 +782,11 @@
             display: flex;
         }
         .image-viewer img {
-            max-width: 90%;
-            max-height: 90%;
+            max-width: 360px;
+            max-height: 360px;
             border-radius: 0.5rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            object-fit: contain;
         }
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -883,6 +891,13 @@
                             <span>Все категории</span>
                         </div>
                         <div class="category-count" id="count-all">0</div>
+                    </div>
+                    <div class="category-item" data-category="none">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: #d1d5db;"></div>
+                            <span>Без категории</span>
+                        </div>
+                        <div class="category-count" id="count-none">0</div>
                     </div>
                 </div>
             </div>
@@ -1139,7 +1154,8 @@
                     if (this.currentView !== 'archived' && idea.archived) return false;
                     
                     // Фильтр по категории
-                    if (this.currentCategory !== 'all' && idea.category !== this.currentCategory) return false;
+                    if (this.currentCategory === 'none' && idea.category !== null) return false;
+                    if (this.currentCategory !== 'all' && this.currentCategory !== 'none' && idea.category !== this.currentCategory) return false;
                     
                     // Фильтр по тегу
                     if (this.currentTag && (!idea.tags || !idea.tags.includes(this.currentTag))) return false;
@@ -1271,10 +1287,18 @@
             }
             // Получение категории по ID
             getCategoryById(id) {
+                if (id === 'none') {
+                    return { id: 'none', name: 'Без категории', color: '#d1d5db', lightColor: '#f9fafb' };
+                }
                 return this.appState.categories.find(category => category.id === id);
             }
             // Подсчет идей в категории
             countIdeasInCategory(categoryId) {
+                if (categoryId === 'none') {
+                    return this.appState.ideas.filter(idea => 
+                        idea.category === null && !idea.archived
+                    ).length;
+                }
                 return this.appState.ideas.filter(idea => 
                     idea.category === categoryId && !idea.archived
                 ).length;
@@ -1328,6 +1352,7 @@
                 this.updateCurrentCategoryTitle();
                 this.updateSearchInterface();
                 this.setupFabDragging();
+                this.setupOrientationChange();
             }
             // Настройка обработчиков событий
             setupEventListeners() {
@@ -1527,6 +1552,56 @@
                     this.endFabDrag();
                 });
             }
+            // Настройка обработки изменения ориентации экрана
+            setupOrientationChange() {
+                window.addEventListener('orientationchange', () => {
+                    // Небольшая задержка, чтобы убедиться, что ориентация изменилась
+                    setTimeout(() => {
+                        this.adjustFabPosition();
+                    }, 300);
+                });
+                
+                // Также обрабатываем изменение размера окна
+                window.addEventListener('resize', () => {
+                    this.adjustFabPosition();
+                });
+            }
+            // Корректировка позиции FAB при изменении ориентации
+            adjustFabPosition() {
+                const fabRect = this.fab.getBoundingClientRect();
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const fabSize = this.fab.offsetWidth;
+                const margin = 10; // Отступ от краев
+                
+                // Проверяем, находится ли кнопка за пределами видимой области
+                if (fabRect.right > windowWidth) {
+                    // Если кнопка выходит за правую границу
+                    this.fab.style.right = `${margin}px`;
+                    this.fab.style.left = 'auto';
+                } else if (fabRect.left < 0) {
+                    // Если кнопка выходит за левую границу
+                    this.fab.style.left = `${margin}px`;
+                    this.fab.style.right = 'auto';
+                }
+                
+                if (fabRect.bottom > windowHeight) {
+                    // Если кнопка выходит за нижнюю границу
+                    this.fab.style.bottom = `${margin}px`;
+                    this.fab.style.top = 'auto';
+                } else if (fabRect.top < 0) {
+                    // Если кнопка выходит за верхнюю границу
+                    this.fab.style.top = `${margin}px`;
+                    this.fab.style.bottom = 'auto';
+                }
+                
+                // Сохраняем новую позицию
+                const newFabRect = this.fab.getBoundingClientRect();
+                localStorage.setItem('fabPosition', JSON.stringify({
+                    left: newFabRect.left,
+                    top: newFabRect.top
+                }));
+            }
             // Начало перетаскивания FAB
             startFabDrag(clientX, clientY) {
                 this.isLongPress = false; // Сбрасываем флаг долгого нажатия
@@ -1645,6 +1720,8 @@
                     this.currentCategoryElement.textContent = 'Архив';
                 } else if (this.appState.currentCategory === 'all') {
                     this.currentCategoryElement.textContent = 'Все категории';
+                } else if (this.appState.currentCategory === 'none') {
+                    this.currentCategoryElement.textContent = 'Без категории';
                 } else {
                     const category = this.categoryManager.getCategoryById(this.appState.currentCategory);
                     this.currentCategoryElement.textContent = category ? category.name : 'Без категории';
@@ -1669,8 +1746,7 @@
                     const img = new Image();
                     img.onload = () => {
                         // Определяем максимальные размеры
-                        const cardHeight = 120; // Высота карточки
-                        const maxSize = cardHeight * 2; // Максимальный размер = высота карточки * 2
+                        const maxSize = 360; // Максимальный размер = 360px (три высоты карточки)
                         
                         // Создаем canvas для масштабирования
                         const canvas = document.createElement('canvas');
@@ -2050,6 +2126,12 @@
                             <h3>Нет архивированных идей</h3>
                             <p>Архивируйте некоторые идеи, чтобы увидеть их здесь</p>
                         `;
+                    } else if (this.appState.currentCategory === 'none') {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-folder-open"></i>
+                            <h3>Нет идей без категории</h3>
+                            <p>Добавьте идеи без категории или выберите другую категорию</p>
+                        `;
                     } else {
                         this.emptyState.innerHTML = `
                             <i class="fas fa-lightbulb"></i>
@@ -2066,7 +2148,7 @@
                         const category = this.categoryManager.getCategoryById(idea.category);
                         const lightColor = category ? category.lightColor : '#f9fafb';
                         const categoryName = category ? category.name : 'Без категории';
-                        const categoryColor = category ? category.color : '#9ca3af';
+                        const categoryColor = category ? category.color : '#d1d5db';
                         const formattedDate = new Date(idea.createdAt).toLocaleDateString('ru-RU', { 
                             year: 'numeric', 
                             month: 'short', 
@@ -2249,6 +2331,13 @@
                         </div>
                         <div class="category-count" id="count-all">0</div>
                     </div>
+                    <div class="category-item" data-category="none">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: #d1d5db;"></div>
+                            <span>Без категории</span>
+                        </div>
+                        <div class="category-count" id="count-none">0</div>
+                    </div>
                 ` + categoriesHTML;
                 
                 // Обработчики для кнопок редактирования категорий
@@ -2281,6 +2370,15 @@
                 const countAllElement = document.getElementById('count-all');
                 if (countAllElement) {
                     countAllElement.textContent = allCount;
+                }
+                
+                // Счетчик для "Без категории"
+                const noneCount = this.appState.ideas.filter(idea => 
+                    idea.category === null && !idea.archived
+                ).length;
+                const countNoneElement = document.getElementById('count-none');
+                if (countNoneElement) {
+                    countNoneElement.textContent = noneCount;
                 }
                 
                 // Счетчики для категорий
