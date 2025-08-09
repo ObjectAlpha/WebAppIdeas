@@ -489,31 +489,34 @@
         /* Floating Action Button */
         .fab {
             position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 56px;
-            height: 56px;
+            bottom: 2rem;
+            right: 2rem;
+            width: 73px; /* Увеличено на 30% (56 * 1.3) */
+            height: 73px; /* Увеличено на 30% (56 * 1.3) */
             border-radius: 50%;
             background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 50%;
             box-shadow: var(--shadow-lg);
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 31px; /* Увеличено на 30% (24 * 1.3) */
             z-index: 100;
             transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
         .fab:hover {
             background-color: var(--primary-hover);
-            transform: scale(1.05);
+            transform: scale(1.1);
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .fab:active {
+            transform: scale(0.95);
         }
         .fab.dragging {
-            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.2);
-            transform: scale(1.1);
+            box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.3);
+            transform: scale(1.15);
         }
         /* Modal Styles */
         .modal {
@@ -798,9 +801,11 @@
                 font-size: 1.25rem;
             }
             .fab {
-                width: 48px;
-                height: 48px;
-                font-size: 20px;
+                width: 62px; /* Увеличено на 30% (48 * 1.3) */
+                height: 62px; /* Увеличено на 30% (48 * 1.3) */
+                font-size: 26px; /* Увеличено на 30% (20 * 1.3) */
+                bottom: 1.5rem;
+                right: 1.5rem;
             }
         }
     </style>
@@ -904,8 +909,8 @@
         </main>
         
         <!-- Floating Action Button -->
-        <button class="fab" id="fab">
-            <i class="fas fa-plus"></i>
+        <button class="fab" id="fab" aria-label="Добавить новую идею">
+            <i class="fas fa-plus" aria-hidden="true"></i>
         </button>
     </div>
     <!-- Idea Modal -->
@@ -1015,7 +1020,6 @@
                 this.filterByImage = false;
                 this.sidebarOpen = false;
             }
-
             // Загрузка данных из localStorage
             loadFromStorage() {
                 try {
@@ -1023,7 +1027,6 @@
                     if (storedIdeas) {
                         this.ideas = JSON.parse(storedIdeas);
                     }
-
                     const storedCategories = localStorage.getItem('categories');
                     if (storedCategories) {
                         this.categories = JSON.parse(storedCategories);
@@ -1055,7 +1058,6 @@
                     this.categories = this.getDefaultCategories();
                 }
             }
-
             // Сохранение данных в localStorage
             saveToStorage() {
                 try {
@@ -1065,7 +1067,6 @@
                     console.error('Error saving data to storage:', e);
                 }
             }
-
             // Получение категорий по умолчанию
             getDefaultCategories() {
                 return [
@@ -1075,7 +1076,6 @@
                     { id: 'inspiration', name: 'Вдохновение', color: '#ec4899', lightColor: '#fdf2f8' }
                 ];
             }
-
             // Получение светлого цвета из HEX
             getLightColor(hexColor) {
                 const r = parseInt(hexColor.slice(1, 3), 16);
@@ -1091,7 +1091,6 @@
                     lightG.toString(16).padStart(2, '0') + 
                     lightB.toString(16).padStart(2, '0');
             }
-
             // Фильтрация идей
             getFilteredIdeas(searchTerm = '') {
                 return this.ideas.filter(idea => {
@@ -1122,13 +1121,11 @@
                 }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             }
         }
-
         // Управление идеями
         class IdeaManager {
             constructor(appState) {
                 this.appState = appState;
             }
-
             // Добавление новой идеи
             addIdea(idea) {
                 const newIdea = {
@@ -1147,7 +1144,6 @@
                 this.appState.saveToStorage();
                 return newIdea;
             }
-
             // Обновление идеи
             updateIdea(id, updates) {
                 const index = this.appState.ideas.findIndex(idea => idea.id === id);
@@ -1162,13 +1158,11 @@
                 }
                 return null;
             }
-
             // Удаление идеи
             deleteIdea(id) {
                 this.appState.ideas = this.appState.ideas.filter(idea => idea.id !== id);
                 this.appState.saveToStorage();
             }
-
             // Переключение архивации идеи
             toggleArchive(id) {
                 const idea = this.appState.ideas.find(idea => idea.id === id);
@@ -1180,20 +1174,17 @@
                 }
                 return null;
             }
-
             // Очистка архива
             clearArchive() {
                 this.appState.ideas = this.appState.ideas.filter(idea => !idea.archived);
                 this.appState.saveToStorage();
             }
         }
-
         // Управление категориями
         class CategoryManager {
             constructor(appState) {
                 this.appState = appState;
             }
-
             // Добавление новой категории
             addCategory(category) {
                 const newCategory = {
@@ -1207,7 +1198,6 @@
                 this.appState.saveToStorage();
                 return newCategory;
             }
-
             // Обновление категории
             updateCategory(id, updates) {
                 const index = this.appState.categories.findIndex(category => category.id === id);
@@ -1222,7 +1212,6 @@
                 }
                 return null;
             }
-
             // Удаление категории
             deleteCategory(id) {
                 // Переносим идеи из удаляемой категории в "Без категории"
@@ -1240,12 +1229,10 @@
                 this.appState.categories = this.appState.categories.filter(category => category.id !== id);
                 this.appState.saveToStorage();
             }
-
             // Получение категории по ID
             getCategoryById(id) {
                 return this.appState.categories.find(category => category.id === id);
             }
-
             // Подсчет идей в категории
             countIdeasInCategory(categoryId) {
                 return this.appState.ideas.filter(idea => 
@@ -1253,7 +1240,6 @@
                 ).length;
             }
         }
-
         // Управление UI
         class UIManager {
             constructor(appState, ideaManager, categoryManager) {
@@ -1287,8 +1273,9 @@
                 this.fabStartX = 0;
                 this.fabStartY = 0;
                 this.longPressTimer = null;
+                this.isLongPress = false; // Флаг долгого нажатия
+                this.ignoreNextClick = false; // Флаг игнорирования следующего клика
             }
-
             // Инициализация UI
             init() {
                 this.setupEventListeners();
@@ -1300,19 +1287,47 @@
                 this.updateSearchInterface();
                 this.setupFabDragging();
             }
-
             // Настройка обработчиков событий
             setupEventListeners() {
                 // Переключение бокового меню
                 this.menuToggle.addEventListener('click', () => {
                     this.toggleSidebar();
                 });
-
+                
                 // Кнопка добавления идеи (FAB)
-                this.fab.addEventListener('click', () => {
+                this.fab.addEventListener('click', (e) => {
+                    // Если нужно игнорировать этот клик (после перетаскивания)
+                    if (this.ignoreNextClick) {
+                        this.ignoreNextClick = false; // Сбрасываем флаг
+                        return;
+                    }
+                    
+                    // Если было долгое нажатие (но не перетаскивание)
+                    if (this.isLongPress) {
+                        this.isLongPress = false; // Сбрасываем флаг
+                        return;
+                    }
+                    
                     this.openIdeaModal();
                 });
-
+                
+                // Обработчик для touchend (для мобильных устройств)
+                this.fab.addEventListener('touchend', (e) => {
+                    // Если нужно игнорировать этот тап (после перетаскивания)
+                    if (this.ignoreNextClick) {
+                        this.ignoreNextClick = false; // Сбрасываем флаг
+                        return;
+                    }
+                    
+                    // Если было долгое нажатие (но не перетаскивание)
+                    if (this.isLongPress) {
+                        this.isLongPress = false; // Сбрасываем флаг
+                        return;
+                    }
+                    
+                    this.openIdeaModal();
+                });
+                
                 // Кнопки модального окна идеи
                 document.getElementById('close-modal-btn').addEventListener('click', () => {
                     this.closeIdeaModal();
@@ -1323,7 +1338,6 @@
                 document.getElementById('save-idea-btn').addEventListener('click', () => {
                     this.saveIdea();
                 });
-
                 // Навигация в боковой панели
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.addEventListener('click', () => {
@@ -1336,7 +1350,6 @@
                         this.renderIdeas();
                     });
                 });
-
                 // Фильтрация по категориям
                 document.addEventListener('click', (e) => {
                     if (e.target.closest('.category-item')) {
@@ -1350,18 +1363,15 @@
                         this.renderIdeas();
                     }
                 });
-
                 // Поиск
                 this.searchInput.addEventListener('input', () => {
                     this.updateSearchInterface();
                     this.renderIdeas();
                 });
-
                 // Очистка поиска
                 this.searchClear.addEventListener('click', () => {
                     this.clearSearch();
                 });
-
                 // Очистка фильтров
                 document.getElementById('clear-filter-btn').addEventListener('click', () => {
                     this.clearTagFilter();
@@ -1375,7 +1385,6 @@
                 document.querySelector('#image-filter-container .filter-tag').addEventListener('click', () => {
                     this.clearImageFilter();
                 });
-
                 // Очистка архива
                 document.getElementById('clear-archive-btn').addEventListener('click', () => {
                     if (confirm('Вы уверены, что хотите удалить все архивные идеи? Это действие невозможно отменить.')) {
@@ -1385,7 +1394,6 @@
                         this.showToast('Архив успешно очищен');
                     }
                 });
-
                 // Управление категориями
                 document.getElementById('add-category-btn').addEventListener('click', () => {
                     this.openCategoryModal();
@@ -1402,7 +1410,6 @@
                 document.getElementById('delete-category-btn').addEventListener('click', () => {
                     this.deleteCategory();
                 });
-
                 // Выбор цвета категории
                 document.getElementById('color-picker').addEventListener('click', (e) => {
                     if (e.target.classList.contains('color-option')) {
@@ -1411,7 +1418,6 @@
                         this.appState.selectedColor = e.target.dataset.color;
                     }
                 });
-
                 // Загрузка изображения
                 document.getElementById('image-upload-container').addEventListener('click', () => {
                     document.getElementById('idea-image').click();
@@ -1428,7 +1434,6 @@
                         reader.readAsDataURL(file);
                     }
                 });
-
                 // Импорт/экспорт
                 document.getElementById('export-btn').addEventListener('click', () => {
                     this.exportData();
@@ -1439,7 +1444,6 @@
                 document.getElementById('import-file').addEventListener('change', (e) => {
                     this.importData(e);
                 });
-
                 // Закрытие модальных окон по клику вне их
                 this.ideaModal.addEventListener('click', (e) => {
                     if (e.target === this.ideaModal) {
@@ -1452,30 +1456,25 @@
                     }
                 });
             }
-
             // Настройка перетаскивания FAB
             setupFabDragging() {
                 // События для мыши
                 this.fab.addEventListener('mousedown', (e) => {
                     this.startFabDrag(e.clientX, e.clientY);
                 });
-
                 document.addEventListener('mousemove', (e) => {
                     if (this.isDragging) {
                         this.dragFab(e.clientX, e.clientY);
                     }
                 });
-
                 document.addEventListener('mouseup', () => {
                     this.endFabDrag();
                 });
-
                 // События для касания
                 this.fab.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
                     this.startFabDrag(touch.clientX, touch.clientY);
                 });
-
                 document.addEventListener('touchmove', (e) => {
                     if (this.isDragging) {
                         const touch = e.touches[0];
@@ -1483,17 +1482,19 @@
                         e.preventDefault(); // Предотвращаем прокрутку страницы
                     }
                 });
-
                 document.addEventListener('touchend', () => {
                     this.endFabDrag();
                 });
             }
-
             // Начало перетаскивания FAB
             startFabDrag(clientX, clientY) {
+                this.isLongPress = false; // Сбрасываем флаг долгого нажатия
+                this.ignoreNextClick = false; // Сбрасываем флаг игнорирования
+                
                 // Устанавливаем таймер для определения долгого нажатия
                 this.longPressTimer = setTimeout(() => {
                     this.isDragging = true;
+                    this.isLongPress = true; // Устанавливаем флаг долгого нажатия
                     this.fab.classList.add('dragging');
                     
                     // Сохраняем начальные позиции
@@ -1505,33 +1506,26 @@
                     this.fabStartY = fabRect.top;
                 }, 500); // 500 мс для долгого нажатия
             }
-
             // Перетаскивание FAB
             dragFab(clientX, clientY) {
                 if (!this.isDragging) return;
-
                 // Вычисляем смещение
                 const deltaX = clientX - this.dragStartX;
                 const deltaY = clientY - this.dragStartY;
-
                 // Новая позиция FAB
                 let newX = this.fabStartX + deltaX;
                 let newY = this.fabStartY + deltaY;
-
                 // Ограничиваем перемещение в пределах окна
-                const fabSize = 56; // Размер FAB
+                const fabSize = this.fab.offsetWidth; // Используем актуальный размер
                 const margin = 10; // Отступ от краев
-
                 newX = Math.max(margin, Math.min(window.innerWidth - fabSize - margin, newX));
                 newY = Math.max(margin, Math.min(window.innerHeight - fabSize - margin, newY));
-
                 // Применяем новую позицию
                 this.fab.style.left = `${newX}px`;
                 this.fab.style.top = `${newY}px`;
                 this.fab.style.right = 'auto';
                 this.fab.style.bottom = 'auto';
             }
-
             // Окончание перетаскивания FAB
             endFabDrag() {
                 // Сбрасываем таймер долгого нажатия
@@ -1539,11 +1533,12 @@
                     clearTimeout(this.longPressTimer);
                     this.longPressTimer = null;
                 }
-
+                
                 // Если было перетаскивание
                 if (this.isDragging) {
                     this.isDragging = false;
                     this.fab.classList.remove('dragging');
+                    this.ignoreNextClick = true; // Устанавливаем флаг игнорирования следующего клика
                     
                     // Сохраняем позицию FAB в localStorage
                     const fabRect = this.fab.getBoundingClientRect();
@@ -1553,7 +1548,6 @@
                     }));
                 }
             }
-
             // Восстановление позиции FAB
             restoreFabPosition() {
                 const savedPosition = localStorage.getItem('fabPosition');
@@ -1562,7 +1556,7 @@
                         const position = JSON.parse(savedPosition);
                         
                         // Проверяем, что позиция в пределах видимой области
-                        const fabSize = 56;
+                        const fabSize = this.fab.offsetWidth; // Используем актуальный размер
                         const margin = 10;
                         
                         if (position.left >= margin && 
@@ -1584,10 +1578,9 @@
                 // Если сохраненная позиция недействительна, используем позицию по умолчанию
                 this.fab.style.left = 'auto';
                 this.fab.style.top = 'auto';
-                this.fab.style.right = '1.5rem';
-                this.fab.style.bottom = '1.5rem';
+                this.fab.style.right = '2rem';
+                this.fab.style.bottom = '2rem';
             }
-
             // Обновление интерфейса поиска
             updateSearchInterface() {
                 const searchValue = this.searchInput.value;
@@ -1599,14 +1592,12 @@
                     this.searchClear.classList.remove('visible');
                 }
             }
-
             // Очистка поля поиска
             clearSearch() {
                 this.searchInput.value = '';
                 this.updateSearchInterface();
                 this.renderIdeas();
             }
-
             // Обновление заголовка текущей категории
             updateCurrentCategoryTitle() {
                 if (this.appState.currentView === 'archived') {
@@ -1618,7 +1609,6 @@
                     this.currentCategoryElement.textContent = category ? category.name : 'Без категории';
                 }
             }
-
             // Переключение бокового меню
             toggleSidebar() {
                 this.appState.sidebarOpen = !this.appState.sidebarOpen;
@@ -1631,12 +1621,10 @@
                     this.menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
                 }
             }
-
             // Отображение идей
             renderIdeas() {
                 const searchTerm = this.searchInput.value.toLowerCase();
                 const filteredIdeas = this.appState.getFilteredIdeas(searchTerm);
-
                 if (filteredIdeas.length === 0) {
                     this.ideasList.style.display = 'none';
                     this.emptyState.style.display = 'flex';
@@ -1766,7 +1754,6 @@
                     });
                 }
             }
-
             // Отображение категорий
             renderCategories() {
                 const categoriesHTML = this.appState.categories.map(category => `
@@ -1820,7 +1807,6 @@
                     });
                 });
             }
-
             // Обновление счетчиков категорий
             updateCategoryCounts() {
                 // Счетчик для всех идей
@@ -1839,7 +1825,6 @@
                     }
                 });
             }
-
             // Обновление списка категорий в форме
             updateCategorySelect() {
                 const ideaCategorySelect = document.getElementById('idea-category');
@@ -1849,7 +1834,6 @@
                     ).join('');
                 ideaCategorySelect.innerHTML = options;
             }
-
             // Открытие модального окна идеи
             openIdeaModal(ideaId = null) {
                 this.appState.currentIdeaId = ideaId;
@@ -1890,7 +1874,6 @@
                 this.renderTags();
                 this.ideaModal.classList.add('active');
             }
-
             // Закрытие модального окна идеи
             closeIdeaModal() {
                 this.ideaModal.classList.remove('active');
@@ -1899,7 +1882,6 @@
                 this.appState.currentImageData = null;
                 document.getElementById('image-preview').style.display = 'none';
             }
-
             // Сохранение идеи
             saveIdea() {
                 const title = document.getElementById('idea-title').value.trim();
@@ -1937,7 +1919,6 @@
                 this.renderIdeas();
                 this.closeIdeaModal();
             }
-
             // Переключение архивации идеи
             toggleArchiveIdea(ideaId) {
                 const idea = this.ideaManager.toggleArchive(ideaId);
@@ -1947,7 +1928,6 @@
                     this.showToast(idea.archived ? 'Идея архивирована' : 'Идея восстановлена');
                 }
             }
-
             // Удаление идеи
             deleteIdea(ideaId) {
                 if (confirm('Вы уверены, что хотите удалить эту идею?')) {
@@ -1957,7 +1937,6 @@
                     this.showToast('Идея удалена');
                 }
             }
-
             // Открытие модального окна категории
             openCategoryModal(categoryId = null) {
                 this.appState.currentCategoryId = categoryId;
@@ -1993,13 +1972,11 @@
                 
                 this.categoryModal.classList.add('active');
             }
-
             // Закрытие модального окна категории
             closeCategoryModal() {
                 this.categoryModal.classList.remove('active');
                 document.getElementById('category-form').reset();
             }
-
             // Сохранение категории
             saveCategory() {
                 const name = document.getElementById('category-name').value.trim();
@@ -2031,7 +2008,6 @@
                 this.renderIdeas();
                 this.closeCategoryModal();
             }
-
             // Удаление категории
             deleteCategory() {
                 if (confirm('Вы уверены, что хотите удалить эту категорию? Все идеи в этой категории будут помечены как "Без категории".')) {
@@ -2044,7 +2020,6 @@
                     this.showToast('Категория удалена');
                 }
             }
-
             // Отображение тегов в форме
             renderTags() {
                 const tagsContainer = document.getElementById('tags-container');
@@ -2083,7 +2058,6 @@
                     });
                 });
             }
-
             // Установка фильтра по тегу
             setTagFilter(tag) {
                 this.appState.currentTag = tag;
@@ -2091,28 +2065,24 @@
                 this.filterTagText.textContent = tag;
                 this.renderIdeas();
             }
-
             // Очистка фильтра по тегу
             clearTagFilter() {
                 this.appState.currentTag = null;
                 this.filterContainer.classList.remove('active');
                 this.renderIdeas();
             }
-
             // Установка фильтра по изображению
             setImageFilter() {
                 this.appState.filterByImage = true;
                 this.imageFilterContainer.classList.add('active');
                 this.renderIdeas();
             }
-
             // Очистка фильтра по изображению
             clearImageFilter() {
                 this.appState.filterByImage = false;
                 this.imageFilterContainer.classList.remove('active');
                 this.renderIdeas();
             }
-
             // Экспорт данных
             exportData() {
                 const data = {
@@ -2131,7 +2101,6 @@
                 
                 this.showToast('Данные успешно экспортированы');
             }
-
             // Импорт данных
             importData(e) {
                 const file = e.target.files[0];
@@ -2167,7 +2136,6 @@
                 // Очистка поля ввода файла
                 e.target.value = '';
             }
-
             // Показ уведомления
             showToast(message, type = 'success') {
                 this.toastMessage.textContent = message;
@@ -2178,7 +2146,6 @@
                 }, 3000);
             }
         }
-
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => {
             const appState = new AppState();
