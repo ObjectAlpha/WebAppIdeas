@@ -757,6 +757,29 @@
             transform: translateY(0);
             opacity: 1;
         }
+        /* Модальное окно для просмотра изображения */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            cursor: pointer;
+        }
+        .image-viewer.active {
+            display: flex;
+        }
+        .image-viewer img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
@@ -939,11 +962,11 @@
                 <form id="idea-form">
                     <div class="form-group">
                         <label class="form-label" for="idea-title">Заголовок</label>
-                        <input type="text" class="form-input" id="idea-title" required>
+                        <input type="text" class="form-input" id="idea-title" placeholder="Новая идея">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="idea-content">Содержание</label>
-                        <textarea class="form-textarea" id="idea-content" required></textarea>
+                        <textarea class="form-textarea" id="idea-content" placeholder="Что нибудь когда нибудь придумаем"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="idea-category">Категория</label>
@@ -1015,6 +1038,10 @@
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
         <span id="toast-message">Идея успешно сохранена!</span>
+    </div>
+    <!-- Модальное окно для просмотра изображения -->
+    <div class="image-viewer" id="image-viewer">
+        <img id="viewer-image" src="" alt="Просмотр изображения">
     </div>
     <script>
         // Управление состоянием приложения
@@ -1278,6 +1305,8 @@
                 this.menuToggle = document.getElementById('menu-toggle');
                 this.currentCategoryElement = document.getElementById('current-category');
                 this.fab = document.getElementById('fab');
+                this.imageViewer = document.getElementById('image-viewer');
+                this.viewerImage = document.getElementById('viewer-image');
                 
                 // Для перетаскивания FAB
                 this.isDragging = false;
@@ -1438,13 +1467,7 @@
                 document.getElementById('idea-image').addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            this.appState.currentImageData = event.target.result;
-                            document.getElementById('image-preview').src = this.appState.currentImageData;
-                            document.getElementById('image-preview').style.display = 'block';
-                        };
-                        reader.readAsDataURL(file);
+                        this.processImage(file);
                     }
                 });
                 // Импорт/экспорт
@@ -1467,6 +1490,11 @@
                     if (e.target === this.categoryModal) {
                         this.closeCategoryModal();
                     }
+                });
+                
+                // Закрытие просмотра изображения
+                this.imageViewer.addEventListener('click', () => {
+                    this.closeImageViewer();
                 });
             }
             // Настройка перетаскивания FAB
@@ -1634,247 +1662,50 @@
                     this.menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
                 }
             }
-            // Отображение идей
-            renderIdeas() {
-                const searchTerm = this.searchInput.value.toLowerCase();
-                const filteredIdeas = this.appState.getFilteredIdeas(searchTerm);
-                if (filteredIdeas.length === 0) {
-                    this.ideasList.style.display = 'none';
-                    this.emptyState.style.display = 'flex';
-                    
-                    if (this.appState.filterByImage) {
-                        this.emptyState.innerHTML = `
-                            <i class="fas fa-image"></i>
-                            <h3>Нет идей с изображениями</h3>
-                            <p>Добавьте изображения к идеям или сбросьте фильтр</p>
-                        `;
-                    } else if (this.appState.currentTag) {
-                        this.emptyState.innerHTML = `
-                            <i class="fas fa-tag"></i>
-                            <h3>Нет идей с тегом "${this.appState.currentTag}"</h3>
-                            <p>Попробуйте другой тег или сбросьте фильтр</p>
-                        `;
-                    } else if (searchTerm) {
-                        this.emptyState.innerHTML = `
-                            <i class="fas fa-search"></i>
-                            <h3>Нет подходящих идей</h3>
-                            <p>Попробуйте другой поисковый запрос</p>
-                        `;
-                    } else if (this.appState.currentView === 'archived') {
-                        this.emptyState.innerHTML = `
-                            <i class="fas fa-archive"></i>
-                            <h3>Нет архивированных идей</h3>
-                            <p>Архивируйте некоторые идеи, чтобы увидеть их здесь</p>
-                        `;
-                    } else {
-                        this.emptyState.innerHTML = `
-                            <i class="fas fa-lightbulb"></i>
-                            <h3>Пока нет идей</h3>
-                            <p>Нажмите на плюс, чтобы добавить свою первую идею</p>
-                        `;
-                    }
-                } else {
-                    this.ideasList.style.display = 'flex';
-                    this.emptyState.style.display = 'none';
-                    
-                    // Создаем HTML для карточек
-                    const ideasHTML = filteredIdeas.map(idea => {
-                        const category = this.categoryManager.getCategoryById(idea.category);
-                        const lightColor = category ? category.lightColor : '#f9fafb';
-                        const categoryName = category ? category.name : 'Без категории';
-                        const categoryColor = category ? category.color : '#9ca3af';
-                        const formattedDate = new Date(idea.createdAt).toLocaleDateString('ru-RU', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                        });
-                        const formattedTime = new Date(idea.createdAt).toLocaleTimeString('ru-RU', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                        });
+            // Обработка изображения
+            processImage(file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Определяем максимальные размеры
+                        const cardHeight = 120; // Высота карточки
+                        const maxSize = cardHeight * 2; // Максимальный размер = высота карточки * 2
                         
-                        return `
-                            <div class="idea-card" data-id="${idea.id}" style="background-color: ${lightColor}; --category-color: ${categoryColor};">
-                                <div class="idea-content-wrapper">
-                                    ${idea.image ? `
-                                        <div class="idea-image-container" onclick="uiManager.setImageFilter()">
-                                            <img src="${idea.image}" alt="Изображение идеи" class="idea-image">
-                                        </div>
-                                    ` : ''}
-                                    <div class="idea-main">
-                                        <div class="idea-header">
-                                            <div>
-                                                <div class="idea-title">${idea.title}</div>
-                                                <div class="idea-category">
-                                                    <div class="category-dot" style="background-color: ${categoryColor};"></div>
-                                                    ${categoryName}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="idea-content">${idea.content}</div>
-                                        <div class="idea-footer">
-                                            <div class="idea-date">${formattedDate} в ${formattedTime}</div>
-                                            <div class="idea-tags">
-                                                ${(idea.tags || []).map(tag => 
-                                                    `<span class="tag" data-tag="${tag}">${tag}</span>`
-                                                ).join('')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="idea-actions">
-                                    <button class="action-btn edit-btn" data-id="${idea.id}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn archive-btn" data-id="${idea.id}">
-                                        <i class="fas fa-${idea.archived ? 'undo' : 'archive'}"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" data-id="${idea.id}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    // Очищаем список и добавляем пустое пространство сверху
-                    this.ideasList.innerHTML = `
-                        <div class="empty-space empty-space-top"></div>
-                        ${ideasHTML}
-                        <div class="empty-space empty-space-bottom"></div>
-                    `;
-                    
-                    // Устанавливаем высоту пустых пространств равной половине высоты карточки
-                    setTimeout(() => {
-                        const firstCard = this.ideasList.querySelector('.idea-card');
-                        if (firstCard) {
-                            const cardHeight = firstCard.offsetHeight;
-                            const emptySpaces = this.ideasList.querySelectorAll('.empty-space');
-                            emptySpaces.forEach(space => {
-                                space.style.height = `${cardHeight / 2}px`;
-                            });
+                        // Создаем canvas для масштабирования
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Вычисляем новые размеры с сохранением пропорций
+                        let newWidth = img.width;
+                        let newHeight = img.height;
+                        
+                        if (img.width > maxSize || img.height > maxSize) {
+                            const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+                            newWidth = img.width * ratio;
+                            newHeight = img.height * ratio;
                         }
-                    }, 0);
-                    
-                    // Обработчики для кнопок действий
-                    document.querySelectorAll('.edit-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            this.openIdeaModal(btn.dataset.id);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.archive-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            this.toggleArchiveIdea(btn.dataset.id);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.delete-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            this.deleteIdea(btn.dataset.id);
-                        });
-                    });
-                    
-                    // Обработчики для тегов
-                    document.querySelectorAll('.tag').forEach(tag => {
-                        tag.addEventListener('click', (e) => {
-                            this.setTagFilter(tag.dataset.tag);
-                        });
-                    });
-                    
-                    // Обработчики для раскрытия карточек
-                    document.querySelectorAll('.idea-card').forEach(card => {
-                        card.addEventListener('click', (e) => {
-                            // Проверяем, что клик был не по тегу и не по кнопке действия
-                            if (!e.target.closest('.tag') && !e.target.closest('.action-btn')) {
-                                card.classList.toggle('expanded');
-                            }
-                        });
-                    });
-                }
-            }
-            // Отображение категорий
-            renderCategories() {
-                const categoriesHTML = this.appState.categories.map(category => `
-                    <div class="category-item" data-category="${category.id}">
-                        <div class="category-name">
-                            <div class="category-color" style="background-color: ${category.color};"></div>
-                            <span>${category.name}</span>
-                        </div>
-                        <div class="category-count" id="count-${category.id}">0</div>
-                        <div class="category-actions">
-                            <button class="category-action-btn edit-category-btn" data-id="${category.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="category-action-btn delete-category-btn" data-id="${category.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-                
-                this.categoriesList.innerHTML = `
-                    <div class="category-item active" data-category="all">
-                        <div class="category-name">
-                            <div class="category-color" style="background-color: #9ca3af;"></div>
-                            <span>Все категории</span>
-                        </div>
-                        <div class="category-count" id="count-all">0</div>
-                    </div>
-                ` + categoriesHTML;
-                
-                // Обработчики для кнопок редактирования категорий
-                document.querySelectorAll('.edit-category-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.openCategoryModal(btn.dataset.id);
-                    });
-                });
-                
-                // Обработчики для кнопок удаления категорий
-                document.querySelectorAll('.delete-category-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
-                            this.categoryManager.deleteCategory(btn.dataset.id);
-                            this.renderCategories();
-                            this.updateCategoryCounts();
-                            this.updateCategorySelect();
-                            this.renderIdeas();
-                            this.showToast('Категория удалена');
-                        }
-                    });
-                });
-            }
-            // Обновление счетчиков категорий
-            updateCategoryCounts() {
-                // Счетчик для всех идей
-                const allCount = this.appState.ideas.filter(idea => !idea.archived).length;
-                const countAllElement = document.getElementById('count-all');
-                if (countAllElement) {
-                    countAllElement.textContent = allCount;
-                }
-                
-                // Счетчики для категорий
-                this.appState.categories.forEach(category => {
-                    const count = this.categoryManager.countIdeasInCategory(category.id);
-                    const countElement = document.getElementById(`count-${category.id}`);
-                    if (countElement) {
-                        countElement.textContent = count;
-                    }
-                });
-            }
-            // Обновление списка категорий в форме
-            updateCategorySelect() {
-                const ideaCategorySelect = document.getElementById('idea-category');
-                const options = '<option value="">Выберите категорию</option>' + 
-                    this.appState.categories.map(category => 
-                        `<option value="${category.id}">${category.name}</option>`
-                    ).join('');
-                ideaCategorySelect.innerHTML = options;
+                        
+                        canvas.width = newWidth;
+                        canvas.height = newHeight;
+                        
+                        // Рисуем изображение на canvas
+                        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                        
+                        // Получаем dataURL
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        // Сохраняем изображение
+                        this.appState.currentImageData = dataUrl;
+                        
+                        // Отображаем превью
+                        const imagePreview = document.getElementById('image-preview');
+                        imagePreview.src = dataUrl;
+                        imagePreview.style.display = 'block';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
             // Открытие модального окна идеи
             openIdeaModal(ideaId = null) {
@@ -1926,14 +1757,14 @@
             }
             // Сохранение идеи
             saveIdea() {
-                const title = document.getElementById('idea-title').value.trim();
-                const content = document.getElementById('idea-content').value.trim();
-                const category = document.getElementById('idea-category').value;
+                const titleInput = document.getElementById('idea-title');
+                const contentInput = document.getElementById('idea-content');
                 
-                if (!title || !content) {
-                    this.showToast('Пожалуйста, заполните все обязательные поля', 'error');
-                    return;
-                }
+                // Автоматическое заполнение полей, если они пустые
+                const title = titleInput.value.trim() || 'Новая идея';
+                const content = contentInput.value.trim() || 'Что нибудь когда нибудь придумаем';
+                const category = document.getElementById('idea-category').value;
+                const tags = this.appState.tags.length > 0 ? [...this.appState.tags] : ['Быстро'];
                 
                 if (this.appState.currentIdeaId) {
                     // Обновление существующей идеи
@@ -1941,7 +1772,7 @@
                         title,
                         content,
                         category: category || null,
-                        tags: [...this.appState.tags],
+                        tags,
                         image: this.appState.currentImageData
                     });
                     this.showToast('Идея успешно обновлена');
@@ -1951,7 +1782,7 @@
                         title,
                         content,
                         category: category || null,
-                        tags: [...this.appState.tags],
+                        tags,
                         image: this.appState.currentImageData
                     });
                     this.showToast('Идея успешно создана');
@@ -2177,6 +2008,298 @@
                 
                 // Очистка поля ввода файла
                 e.target.value = '';
+            }
+            // Открытие просмотра изображения
+            openImageViewer(imageSrc) {
+                this.viewerImage.src = imageSrc;
+                this.imageViewer.classList.add('active');
+            }
+            // Закрытие просмотра изображения
+            closeImageViewer() {
+                this.imageViewer.classList.remove('active');
+            }
+            // Отображение идей
+            renderIdeas() {
+                const searchTerm = this.searchInput.value.toLowerCase();
+                const filteredIdeas = this.appState.getFilteredIdeas(searchTerm);
+                if (filteredIdeas.length === 0) {
+                    this.ideasList.style.display = 'none';
+                    this.emptyState.style.display = 'flex';
+                    
+                    if (this.appState.filterByImage) {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-image"></i>
+                            <h3>Нет идей с изображениями</h3>
+                            <p>Добавьте изображения к идеям или сбросьте фильтр</p>
+                        `;
+                    } else if (this.appState.currentTag) {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-tag"></i>
+                            <h3>Нет идей с тегом "${this.appState.currentTag}"</h3>
+                            <p>Попробуйте другой тег или сбросьте фильтр</p>
+                        `;
+                    } else if (searchTerm) {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-search"></i>
+                            <h3>Нет подходящих идей</h3>
+                            <p>Попробуйте другой поисковый запрос</p>
+                        `;
+                    } else if (this.appState.currentView === 'archived') {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-archive"></i>
+                            <h3>Нет архивированных идей</h3>
+                            <p>Архивируйте некоторые идеи, чтобы увидеть их здесь</p>
+                        `;
+                    } else {
+                        this.emptyState.innerHTML = `
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>Пока нет идей</h3>
+                            <p>Нажмите на плюс, чтобы добавить свою первую идею</p>
+                        `;
+                    }
+                } else {
+                    this.ideasList.style.display = 'flex';
+                    this.emptyState.style.display = 'none';
+                    
+                    // Создаем HTML для карточек
+                    const ideasHTML = filteredIdeas.map(idea => {
+                        const category = this.categoryManager.getCategoryById(idea.category);
+                        const lightColor = category ? category.lightColor : '#f9fafb';
+                        const categoryName = category ? category.name : 'Без категории';
+                        const categoryColor = category ? category.color : '#9ca3af';
+                        const formattedDate = new Date(idea.createdAt).toLocaleDateString('ru-RU', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        const formattedTime = new Date(idea.createdAt).toLocaleTimeString('ru-RU', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        
+                        return `
+                            <div class="idea-card" data-id="${idea.id}" style="background-color: ${lightColor}; --category-color: ${categoryColor};">
+                                <div class="idea-content-wrapper">
+                                    ${idea.image ? `
+                                        <div class="idea-image-container" data-image="${idea.image}">
+                                            <img src="${idea.image}" alt="Изображение идеи" class="idea-image">
+                                        </div>
+                                    ` : ''}
+                                    <div class="idea-main">
+                                        <div class="idea-header">
+                                            <div>
+                                                <div class="idea-title">${idea.title}</div>
+                                                <div class="idea-category">
+                                                    <div class="category-dot" style="background-color: ${categoryColor};"></div>
+                                                    ${categoryName}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="idea-content">${idea.content}</div>
+                                        <div class="idea-footer">
+                                            <div class="idea-date">${formattedDate} в ${formattedTime}</div>
+                                            <div class="idea-tags">
+                                                ${(idea.tags || []).map(tag => 
+                                                    `<span class="tag" data-tag="${tag}">${tag}</span>`
+                                                ).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="idea-actions">
+                                    <button class="action-btn edit-btn" data-id="${idea.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn archive-btn" data-id="${idea.id}">
+                                        <i class="fas fa-${idea.archived ? 'undo' : 'archive'}"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" data-id="${idea.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Очищаем список и добавляем пустое пространство сверху
+                    this.ideasList.innerHTML = `
+                        <div class="empty-space empty-space-top"></div>
+                        ${ideasHTML}
+                        <div class="empty-space empty-space-bottom"></div>
+                    `;
+                    
+                    // Устанавливаем высоту пустых пространств равной половине высоты карточки
+                    setTimeout(() => {
+                        const firstCard = this.ideasList.querySelector('.idea-card');
+                        if (firstCard) {
+                            const cardHeight = firstCard.offsetHeight;
+                            const emptySpaces = this.ideasList.querySelectorAll('.empty-space');
+                            emptySpaces.forEach(space => {
+                                space.style.height = `${cardHeight / 2}px`;
+                            });
+                        }
+                    }, 0);
+                    
+                    // Обработчики для кнопок действий
+                    document.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.openIdeaModal(btn.dataset.id);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.archive-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.toggleArchiveIdea(btn.dataset.id);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.deleteIdea(btn.dataset.id);
+                        });
+                    });
+                    
+                    // Обработчики для тегов
+                    document.querySelectorAll('.tag').forEach(tag => {
+                        tag.addEventListener('click', (e) => {
+                            this.setTagFilter(tag.dataset.tag);
+                        });
+                    });
+                    
+                    // Обработчики для раскрытия карточек
+                    document.querySelectorAll('.idea-card').forEach(card => {
+                        card.addEventListener('click', (e) => {
+                            // Проверяем, что клик был не по тегу и не по кнопке действия
+                            if (!e.target.closest('.tag') && !e.target.closest('.action-btn')) {
+                                card.classList.toggle('expanded');
+                            }
+                        });
+                    });
+                    
+                    // Обработчики для изображений
+                    document.querySelectorAll('.idea-image-container').forEach(container => {
+                        const imageSrc = container.dataset.image;
+                        
+                        // Обработчик для долгого нажатия
+                        let pressTimer;
+                        let isLongPress = false;
+                        
+                        const startPress = () => {
+                            pressTimer = setTimeout(() => {
+                                isLongPress = true;
+                                this.openImageViewer(imageSrc);
+                            }, 500);
+                        };
+                        
+                        const endPress = () => {
+                            clearTimeout(pressTimer);
+                            setTimeout(() => {
+                                isLongPress = false;
+                            }, 100);
+                        };
+                        
+                        // События для мыши
+                        container.addEventListener('mousedown', startPress);
+                        container.addEventListener('mouseup', endPress);
+                        container.addEventListener('mouseleave', endPress);
+                        
+                        // События для касания
+                        container.addEventListener('touchstart', startPress);
+                        container.addEventListener('touchend', endPress);
+                        container.addEventListener('touchcancel', endPress);
+                        
+                        // Обработчик клика
+                        container.addEventListener('click', (e) => {
+                            if (!isLongPress) {
+                                // Обычный клик - устанавливаем фильтр по изображениям
+                                this.setImageFilter();
+                            }
+                        });
+                    });
+                }
+            }
+            // Отображение категорий
+            renderCategories() {
+                const categoriesHTML = this.appState.categories.map(category => `
+                    <div class="category-item" data-category="${category.id}">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: ${category.color};"></div>
+                            <span>${category.name}</span>
+                        </div>
+                        <div class="category-count" id="count-${category.id}">0</div>
+                        <div class="category-actions">
+                            <button class="category-action-btn edit-category-btn" data-id="${category.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="category-action-btn delete-category-btn" data-id="${category.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.categoriesList.innerHTML = `
+                    <div class="category-item active" data-category="all">
+                        <div class="category-name">
+                            <div class="category-color" style="background-color: #9ca3af;"></div>
+                            <span>Все категории</span>
+                        </div>
+                        <div class="category-count" id="count-all">0</div>
+                    </div>
+                ` + categoriesHTML;
+                
+                // Обработчики для кнопок редактирования категорий
+                document.querySelectorAll('.edit-category-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.openCategoryModal(btn.dataset.id);
+                    });
+                });
+                
+                // Обработчики для кнопок удаления категорий
+                document.querySelectorAll('.delete-category-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
+                            this.categoryManager.deleteCategory(btn.dataset.id);
+                            this.renderCategories();
+                            this.updateCategoryCounts();
+                            this.updateCategorySelect();
+                            this.renderIdeas();
+                            this.showToast('Категория удалена');
+                        }
+                    });
+                });
+            }
+            // Обновление счетчиков категорий
+            updateCategoryCounts() {
+                // Счетчик для всех идей
+                const allCount = this.appState.ideas.filter(idea => !idea.archived).length;
+                const countAllElement = document.getElementById('count-all');
+                if (countAllElement) {
+                    countAllElement.textContent = allCount;
+                }
+                
+                // Счетчики для категорий
+                this.appState.categories.forEach(category => {
+                    const count = this.categoryManager.countIdeasInCategory(category.id);
+                    const countElement = document.getElementById(`count-${category.id}`);
+                    if (countElement) {
+                        countElement.textContent = count;
+                    }
+                });
+            }
+            // Обновление списка категорий в форме
+            updateCategorySelect() {
+                const ideaCategorySelect = document.getElementById('idea-category');
+                const options = '<option value="">Выберите категорию</option>' + 
+                    this.appState.categories.map(category => 
+                        `<option value="${category.id}">${category.name}</option>`
+                    ).join('');
+                ideaCategorySelect.innerHTML = options;
             }
             // Показ уведомления
             showToast(message, type = 'success') {
