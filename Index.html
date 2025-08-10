@@ -100,6 +100,7 @@
             margin-bottom: 0.25rem;
             cursor: pointer;
             transition: background-color 0.2s;
+            position: relative;
         }
         .sidebar-item:hover {
             background-color: var(--secondary-background);
@@ -112,6 +113,17 @@
             width: 16px;
             color: var(--text-secondary);
         }
+        .sidebar-item-count {
+            position: absolute;
+            right: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background-color: var(--secondary-background);
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+            min-width: 20px;
+            text-align: center;
+        }
         .category-item {
             display: flex;
             align-items: center;
@@ -121,6 +133,7 @@
             margin-bottom: 0.25rem;
             cursor: pointer;
             transition: background-color 0.2s;
+            position: relative;
         }
         .category-item:hover {
             background-color: var(--secondary-background);
@@ -141,14 +154,23 @@
             border-radius: 50%;
         }
         .category-count {
+            position: absolute;
+            right: 0.75rem;
             font-size: 0.75rem;
             color: var(--text-secondary);
+            background-color: var(--secondary-background);
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+            min-width: 20px;
+            text-align: center;
         }
         .category-actions {
             display: flex;
             gap: 0.25rem;
             opacity: 0;
             transition: opacity 0.2s;
+            position: absolute;
+            right: 3rem;
         }
         .category-item:hover .category-actions {
             opacity: 1;
@@ -865,12 +887,14 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Рабочее пространство</div>
                 <div class="sidebar-item active" data-view="all">
-                    <i class="fas fa-home"></i>
-                    <span>Все идеи</span>
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Мои идеи</span>
+                    <span class="sidebar-item-count" id="active-count">0</span>
                 </div>
                 <div class="sidebar-item" data-view="archived">
                     <i class="fas fa-archive"></i>
                     <span>Архив</span>
+                    <span class="sidebar-item-count" id="archived-count">0</span>
                 </div>
                 <button class="clear-archive-btn" id="clear-archive-btn">
                     <i class="fas fa-trash"></i>
@@ -885,13 +909,6 @@
                     </button>
                 </div>
                 <div id="categories-list">
-                    <div class="category-item active" data-category="all">
-                        <div class="category-name">
-                            <div class="category-color" style="background-color: #9ca3af;"></div>
-                            <span>Все категории</span>
-                        </div>
-                        <div class="category-count" id="count-all">0</div>
-                    </div>
                     <div class="category-item" data-category="none">
                         <div class="category-name">
                             <div class="category-color" style="background-color: #d1d5db;"></div>
@@ -921,7 +938,7 @@
                     <button class="menu-toggle" id="menu-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="current-category" id="current-category">Все категории</h1>
+                    <h1 class="current-category" id="current-category">Мои идеи</h1>
                     <div class="search-container" id="search-container">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" class="search-input" id="search-input" placeholder="Поиск идей...">
@@ -1065,7 +1082,7 @@
                 this.ideas = [];
                 this.categories = [];
                 this.currentView = 'all';
-                this.currentCategory = 'all';
+                this.currentCategory = null; // null означает, что категория не выбрана
                 this.currentTag = null;
                 this.currentIdeaId = null;
                 this.currentCategoryId = null;
@@ -1154,8 +1171,15 @@
                     if (this.currentView !== 'archived' && idea.archived) return false;
                     
                     // Фильтр по категории
-                    if (this.currentCategory === 'none' && idea.category !== null) return false;
-                    if (this.currentCategory !== 'all' && this.currentCategory !== 'none' && idea.category !== this.currentCategory) return false;
+                    if (this.currentCategory === null) {
+                        // Не выбрана категория - показываем все идеи текущего вида
+                    } else if (this.currentCategory === 'none') {
+                        // Выбрана категория "Без категории" - показываем только идеи без категории
+                        if (idea.category !== null) return false;
+                    } else {
+                        // Выбрана конкретная категория
+                        if (idea.category !== this.currentCategory) return false;
+                    }
                     
                     // Фильтр по тегу
                     if (this.currentTag && (!idea.tags || !idea.tags.includes(this.currentTag))) return false;
@@ -1175,6 +1199,14 @@
                     
                     return true;
                 }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+            // Подсчет активных идей
+            getActiveIdeasCount() {
+                return this.ideas.filter(idea => !idea.archived).length;
+            }
+            // Подсчет архивных идей
+            getArchivedIdeasCount() {
+                return this.ideas.filter(idea => idea.archived).length;
             }
         }
         // Управление идеями
@@ -1296,11 +1328,13 @@
             countIdeasInCategory(categoryId) {
                 if (categoryId === 'none') {
                     return this.appState.ideas.filter(idea => 
-                        idea.category === null && !idea.archived
+                        idea.category === null && 
+                        (this.appState.currentView === 'archived' ? idea.archived : !idea.archived)
                     ).length;
                 }
                 return this.appState.ideas.filter(idea => 
-                    idea.category === categoryId && !idea.archived
+                    idea.category === categoryId && 
+                    (this.appState.currentView === 'archived' ? idea.archived : !idea.archived)
                 ).length;
             }
         }
@@ -1331,6 +1365,8 @@
                 this.fab = document.getElementById('fab');
                 this.imageViewer = document.getElementById('image-viewer');
                 this.viewerImage = document.getElementById('viewer-image');
+                this.activeCount = document.getElementById('active-count');
+                this.archivedCount = document.getElementById('archived-count');
                 
                 // Для перетаскивания FAB
                 this.isDragging = false;
@@ -1348,6 +1384,7 @@
                 this.renderCategories();
                 this.renderIdeas();
                 this.updateCategoryCounts();
+                this.updateActiveArchivedCounts();
                 this.updateCategorySelect();
                 this.updateCurrentCategoryTitle();
                 this.updateSearchInterface();
@@ -1405,40 +1442,61 @@
                 document.getElementById('save-idea-btn').addEventListener('click', () => {
                     this.saveIdea();
                 });
+                
                 // Навигация в боковой панели
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.addEventListener('click', () => {
-                        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-                        item.classList.add('active');
-                        this.appState.currentView = item.dataset.view;
+                        // Если клик на активный элемент, сбрасываем фильтр по категории
+                        if (item.classList.contains('active')) {
+                            this.appState.currentCategory = null;
+                            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                        } else {
+                            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                            item.classList.add('active');
+                            this.appState.currentView = item.dataset.view;
+                        }
+                        
                         this.clearTagFilter();
                         this.clearImageFilter();
                         this.updateCurrentCategoryTitle();
                         this.renderIdeas();
+                        this.updateCategoryCounts();
                     });
                 });
+                
                 // Фильтрация по категориям
                 document.addEventListener('click', (e) => {
                     if (e.target.closest('.category-item')) {
                         const categoryItem = e.target.closest('.category-item');
-                        document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
-                        categoryItem.classList.add('active');
-                        this.appState.currentCategory = categoryItem.dataset.category;
+                        
+                        // Если клик на активный элемент, сбрасываем фильтр
+                        if (categoryItem.classList.contains('active')) {
+                            this.appState.currentCategory = null;
+                            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                        } else {
+                            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                            categoryItem.classList.add('active');
+                            this.appState.currentCategory = categoryItem.dataset.category;
+                        }
+                        
                         this.clearTagFilter();
                         this.clearImageFilter();
                         this.updateCurrentCategoryTitle();
                         this.renderIdeas();
                     }
                 });
+                
                 // Поиск
                 this.searchInput.addEventListener('input', () => {
                     this.updateSearchInterface();
                     this.renderIdeas();
                 });
+                
                 // Очистка поиска
                 this.searchClear.addEventListener('click', () => {
                     this.clearSearch();
                 });
+                
                 // Очистка фильтров
                 document.getElementById('clear-filter-btn').addEventListener('click', () => {
                     this.clearTagFilter();
@@ -1452,15 +1510,18 @@
                 document.querySelector('#image-filter-container .filter-tag').addEventListener('click', () => {
                     this.clearImageFilter();
                 });
+                
                 // Очистка архива
                 document.getElementById('clear-archive-btn').addEventListener('click', () => {
                     if (confirm('Вы уверены, что хотите удалить все архивные идеи? Это действие невозможно отменить.')) {
                         this.ideaManager.clearArchive();
                         this.updateCategoryCounts();
+                        this.updateActiveArchivedCounts();
                         this.renderIdeas();
                         this.showToast('Архив успешно очищен');
                     }
                 });
+                
                 // Управление категориями
                 document.getElementById('add-category-btn').addEventListener('click', () => {
                     this.openCategoryModal();
@@ -1477,6 +1538,7 @@
                 document.getElementById('delete-category-btn').addEventListener('click', () => {
                     this.deleteCategory();
                 });
+                
                 // Выбор цвета категории
                 document.getElementById('color-picker').addEventListener('click', (e) => {
                     if (e.target.classList.contains('color-option')) {
@@ -1485,6 +1547,7 @@
                         this.appState.selectedColor = e.target.dataset.color;
                     }
                 });
+                
                 // Загрузка изображения
                 document.getElementById('image-upload-container').addEventListener('click', () => {
                     document.getElementById('idea-image').click();
@@ -1495,6 +1558,7 @@
                         this.processImage(file);
                     }
                 });
+                
                 // Импорт/экспорт
                 document.getElementById('export-btn').addEventListener('click', () => {
                     this.exportData();
@@ -1505,6 +1569,7 @@
                 document.getElementById('import-file').addEventListener('change', (e) => {
                     this.importData(e);
                 });
+                
                 // Закрытие модальных окон по клику вне их
                 this.ideaModal.addEventListener('click', (e) => {
                     if (e.target === this.ideaModal) {
@@ -1522,6 +1587,7 @@
                     this.closeImageViewer();
                 });
             }
+            
             // Настройка перетаскивания FAB
             setupFabDragging() {
                 // События для мыши
@@ -1536,6 +1602,7 @@
                 document.addEventListener('mouseup', () => {
                     this.endFabDrag();
                 });
+                
                 // События для касания
                 this.fab.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
@@ -1552,6 +1619,7 @@
                     this.endFabDrag();
                 });
             }
+            
             // Настройка обработки изменения ориентации экрана
             setupOrientationChange() {
                 window.addEventListener('orientationchange', () => {
@@ -1566,6 +1634,7 @@
                     this.adjustFabPosition();
                 });
             }
+            
             // Корректировка позиции FAB при изменении ориентации
             adjustFabPosition() {
                 const fabRect = this.fab.getBoundingClientRect();
@@ -1602,6 +1671,7 @@
                     top: newFabRect.top
                 }));
             }
+            
             // Начало перетаскивания FAB
             startFabDrag(clientX, clientY) {
                 this.isLongPress = false; // Сбрасываем флаг долгого нажатия
@@ -1622,26 +1692,32 @@
                     this.fabStartY = fabRect.top;
                 }, 500); // 500 мс для долгого нажатия
             }
+            
             // Перетаскивание FAB
             dragFab(clientX, clientY) {
                 if (!this.isDragging) return;
+                
                 // Вычисляем смещение
                 const deltaX = clientX - this.dragStartX;
                 const deltaY = clientY - this.dragStartY;
+                
                 // Новая позиция FAB
                 let newX = this.fabStartX + deltaX;
                 let newY = this.fabStartY + deltaY;
+                
                 // Ограничиваем перемещение в пределах окна
                 const fabSize = this.fab.offsetWidth; // Используем актуальный размер
                 const margin = 10; // Отступ от краев
                 newX = Math.max(margin, Math.min(window.innerWidth - fabSize - margin, newX));
                 newY = Math.max(margin, Math.min(window.innerHeight - fabSize - margin, newY));
+                
                 // Применяем новую позицию
                 this.fab.style.left = `${newX}px`;
                 this.fab.style.top = `${newY}px`;
                 this.fab.style.right = 'auto';
                 this.fab.style.bottom = 'auto';
             }
+            
             // Окончание перетаскивания FAB
             endFabDrag() {
                 // Сбрасываем таймер долгого нажатия
@@ -1664,6 +1740,7 @@
                     }));
                 }
             }
+            
             // Восстановление позиции FAB
             restoreFabPosition() {
                 const savedPosition = localStorage.getItem('fabPosition');
@@ -1697,6 +1774,7 @@
                 this.fab.style.right = '2rem';
                 this.fab.style.bottom = '2rem';
             }
+            
             // Обновление интерфейса поиска
             updateSearchInterface() {
                 const searchValue = this.searchInput.value;
@@ -1708,25 +1786,37 @@
                     this.searchClear.classList.remove('visible');
                 }
             }
+            
             // Очистка поля поиска
             clearSearch() {
                 this.searchInput.value = '';
                 this.updateSearchInterface();
                 this.renderIdeas();
             }
+            
             // Обновление заголовка текущей категории
             updateCurrentCategoryTitle() {
                 if (this.appState.currentView === 'archived') {
-                    this.currentCategoryElement.textContent = 'Архив';
-                } else if (this.appState.currentCategory === 'all') {
-                    this.currentCategoryElement.textContent = 'Все категории';
-                } else if (this.appState.currentCategory === 'none') {
-                    this.currentCategoryElement.textContent = 'Без категории';
+                    if (this.appState.currentCategory === null) {
+                        this.currentCategoryElement.textContent = 'Архив';
+                    } else if (this.appState.currentCategory === 'none') {
+                        this.currentCategoryElement.textContent = 'Архив: Без категории';
+                    } else {
+                        const category = this.categoryManager.getCategoryById(this.appState.currentCategory);
+                        this.currentCategoryElement.textContent = category ? `Архив: ${category.name}` : 'Архив';
+                    }
                 } else {
-                    const category = this.categoryManager.getCategoryById(this.appState.currentCategory);
-                    this.currentCategoryElement.textContent = category ? category.name : 'Без категории';
+                    if (this.appState.currentCategory === null) {
+                        this.currentCategoryElement.textContent = 'Мои идеи';
+                    } else if (this.appState.currentCategory === 'none') {
+                        this.currentCategoryElement.textContent = 'Мои идеи: Без категории';
+                    } else {
+                        const category = this.categoryManager.getCategoryById(this.appState.currentCategory);
+                        this.currentCategoryElement.textContent = category ? `Мои идеи: ${category.name}` : 'Мои идеи';
+                    }
                 }
             }
+            
             // Переключение бокового меню
             toggleSidebar() {
                 this.appState.sidebarOpen = !this.appState.sidebarOpen;
@@ -1739,6 +1829,7 @@
                     this.menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
                 }
             }
+            
             // Обработка изображения
             processImage(file) {
                 const reader = new FileReader();
@@ -1783,6 +1874,7 @@
                 };
                 reader.readAsDataURL(file);
             }
+            
             // Открытие модального окна идеи
             openIdeaModal(ideaId = null) {
                 this.appState.currentIdeaId = ideaId;
@@ -1823,6 +1915,7 @@
                 this.renderTags();
                 this.ideaModal.classList.add('active');
             }
+            
             // Закрытие модального окна идеи
             closeIdeaModal() {
                 this.ideaModal.classList.remove('active');
@@ -1831,6 +1924,7 @@
                 this.appState.currentImageData = null;
                 document.getElementById('image-preview').style.display = 'none';
             }
+            
             // Сохранение идеи
             saveIdea() {
                 const titleInput = document.getElementById('idea-title');
@@ -1865,27 +1959,33 @@
                 }
                 
                 this.updateCategoryCounts();
+                this.updateActiveArchivedCounts();
                 this.renderIdeas();
                 this.closeIdeaModal();
             }
+            
             // Переключение архивации идеи
             toggleArchiveIdea(ideaId) {
                 const idea = this.ideaManager.toggleArchive(ideaId);
                 if (idea) {
                     this.updateCategoryCounts();
+                    this.updateActiveArchivedCounts();
                     this.renderIdeas();
                     this.showToast(idea.archived ? 'Идея архивирована' : 'Идея восстановлена');
                 }
             }
+            
             // Удаление идеи
             deleteIdea(ideaId) {
                 if (confirm('Вы уверены, что хотите удалить эту идею?')) {
                     this.ideaManager.deleteIdea(ideaId);
                     this.updateCategoryCounts();
+                    this.updateActiveArchivedCounts();
                     this.renderIdeas();
                     this.showToast('Идея удалена');
                 }
             }
+            
             // Открытие модального окна категории
             openCategoryModal(categoryId = null) {
                 this.appState.currentCategoryId = categoryId;
@@ -1893,7 +1993,7 @@
                 const categoryNameInput = document.getElementById('category-name');
                 const deleteBtn = document.getElementById('delete-category-btn');
                 
-                if (categoryId) {
+                if (categoryId && categoryId !== 'none') {
                     // Редактирование существующей категории
                     const category = this.appState.categories.find(c => c.id === categoryId);
                     if (category) {
@@ -1921,11 +2021,13 @@
                 
                 this.categoryModal.classList.add('active');
             }
+            
             // Закрытие модального окна категории
             closeCategoryModal() {
                 this.categoryModal.classList.remove('active');
                 document.getElementById('category-form').reset();
             }
+            
             // Сохранение категории
             saveCategory() {
                 const name = document.getElementById('category-name').value.trim();
@@ -1935,7 +2037,7 @@
                     return;
                 }
                 
-                if (this.appState.currentCategoryId) {
+                if (this.appState.currentCategoryId && this.appState.currentCategoryId !== 'none') {
                     // Обновление существующей категории
                     this.categoryManager.updateCategory(this.appState.currentCategoryId, {
                         name,
@@ -1957,6 +2059,7 @@
                 this.renderIdeas();
                 this.closeCategoryModal();
             }
+            
             // Удаление категории
             deleteCategory() {
                 if (confirm('Вы уверены, что хотите удалить эту категорию? Все идеи в этой категории будут помечены как "Без категории".')) {
@@ -1969,6 +2072,7 @@
                     this.showToast('Категория удалена');
                 }
             }
+            
             // Отображение тегов в форме
             renderTags() {
                 const tagsContainer = document.getElementById('tags-container');
@@ -2007,6 +2111,7 @@
                     });
                 });
             }
+            
             // Установка фильтра по тегу
             setTagFilter(tag) {
                 this.appState.currentTag = tag;
@@ -2014,24 +2119,28 @@
                 this.filterTagText.textContent = tag;
                 this.renderIdeas();
             }
+            
             // Очистка фильтра по тегу
             clearTagFilter() {
                 this.appState.currentTag = null;
                 this.filterContainer.classList.remove('active');
                 this.renderIdeas();
             }
+            
             // Установка фильтра по изображению
             setImageFilter() {
                 this.appState.filterByImage = true;
                 this.imageFilterContainer.classList.add('active');
                 this.renderIdeas();
             }
+            
             // Очистка фильтра по изображению
             clearImageFilter() {
                 this.appState.filterByImage = false;
                 this.imageFilterContainer.classList.remove('active');
                 this.renderIdeas();
             }
+            
             // Экспорт данных
             exportData() {
                 const data = {
@@ -2050,6 +2159,7 @@
                 
                 this.showToast('Данные успешно экспортированы');
             }
+            
             // Импорт данных
             importData(e) {
                 const file = e.target.files[0];
@@ -2071,6 +2181,7 @@
                         this.appState.saveToStorage();
                         this.renderCategories();
                         this.updateCategoryCounts();
+                        this.updateActiveArchivedCounts();
                         this.updateCategorySelect();
                         this.renderIdeas();
                         
@@ -2085,19 +2196,23 @@
                 // Очистка поля ввода файла
                 e.target.value = '';
             }
+            
             // Открытие просмотра изображения
             openImageViewer(imageSrc) {
                 this.viewerImage.src = imageSrc;
                 this.imageViewer.classList.add('active');
             }
+            
             // Закрытие просмотра изображения
             closeImageViewer() {
                 this.imageViewer.classList.remove('active');
             }
+            
             // Отображение идей
             renderIdeas() {
                 const searchTerm = this.searchInput.value.toLowerCase();
                 const filteredIdeas = this.appState.getFilteredIdeas(searchTerm);
+                
                 if (filteredIdeas.length === 0) {
                     this.ideasList.style.display = 'none';
                     this.emptyState.style.display = 'flex';
@@ -2303,6 +2418,7 @@
                     });
                 }
             }
+            
             // Отображение категорий
             renderCategories() {
                 const categoriesHTML = this.appState.categories.map(category => `
@@ -2323,14 +2439,8 @@
                     </div>
                 `).join('');
                 
+                // Для категории "Без категории" не добавляем кнопки действий
                 this.categoriesList.innerHTML = `
-                    <div class="category-item active" data-category="all">
-                        <div class="category-name">
-                            <div class="category-color" style="background-color: #9ca3af;"></div>
-                            <span>Все категории</span>
-                        </div>
-                        <div class="category-count" id="count-all">0</div>
-                    </div>
                     <div class="category-item" data-category="none">
                         <div class="category-name">
                             <div class="category-color" style="background-color: #d1d5db;"></div>
@@ -2352,7 +2462,7 @@
                 document.querySelectorAll('.delete-category-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
+                        if (confirm('Вы уверены, что хотите удалить эту категорию? Все идеи в этой категории будут помечены как "Без категории".')) {
                             this.categoryManager.deleteCategory(btn.dataset.id);
                             this.renderCategories();
                             this.updateCategoryCounts();
@@ -2363,18 +2473,13 @@
                     });
                 });
             }
+            
             // Обновление счетчиков категорий
             updateCategoryCounts() {
-                // Счетчик для всех идей
-                const allCount = this.appState.ideas.filter(idea => !idea.archived).length;
-                const countAllElement = document.getElementById('count-all');
-                if (countAllElement) {
-                    countAllElement.textContent = allCount;
-                }
-                
                 // Счетчик для "Без категории"
                 const noneCount = this.appState.ideas.filter(idea => 
-                    idea.category === null && !idea.archived
+                    idea.category === null && 
+                    (this.appState.currentView === 'archived' ? idea.archived : !idea.archived)
                 ).length;
                 const countNoneElement = document.getElementById('count-none');
                 if (countNoneElement) {
@@ -2390,6 +2495,21 @@
                     }
                 });
             }
+            
+            // Обновление счетчиков активных и архивных идей
+            updateActiveArchivedCounts() {
+                const activeCount = this.appState.getActiveIdeasCount();
+                const archivedCount = this.appState.getArchivedIdeasCount();
+                
+                if (this.activeCount) {
+                    this.activeCount.textContent = activeCount;
+                }
+                
+                if (this.archivedCount) {
+                    this.archivedCount.textContent = archivedCount;
+                }
+            }
+            
             // Обновление списка категорий в форме
             updateCategorySelect() {
                 const ideaCategorySelect = document.getElementById('idea-category');
@@ -2399,6 +2519,7 @@
                     ).join('');
                 ideaCategorySelect.innerHTML = options;
             }
+            
             // Показ уведомления
             showToast(message, type = 'success') {
                 this.toastMessage.textContent = message;
@@ -2409,6 +2530,7 @@
                 }, 3000);
             }
         }
+        
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => {
             const appState = new AppState();
